@@ -81,8 +81,6 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 app_ui = ui.page_fluid(
 	ui.panel_title(ui.HTML('<a href="https://kkernick.github.io">Heatmapper</a>')),
-
-	ui.HTML(load),
 	ui.layout_sidebar(
 		ui.sidebar(
 
