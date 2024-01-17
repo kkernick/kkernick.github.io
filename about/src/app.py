@@ -21,7 +21,7 @@ introduction = """
 		<script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
 		
 		<script>
-			$(function(){$("#introduction").load("../../input/introduction.html"}); 
+			$(function(){$("#introduction").load("../../www/input/introduction.html"}); 
 		</script>
 		
 		<script type="text/javascript" src="../../../www/js/google-analytics.js"></script>
