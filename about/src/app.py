@@ -23,15 +23,11 @@ introduction = """
 		
 		<script>
 			$(function(){ 
-				$("#navbar").load("../../../www/navbar.html", function(){ 
-					$('#aboutTab').addClass('active');
-					$('#heatmapper-logo').on('click', function(){ window.location.href = '/'; });
-				});
+				$("#navbar").load("../../www/input/introduction.html");
 			}); 
 		</script>
 		
 		<script type="text/javascript" src="../../../www/js/google-analytics.js"></script>
-		
   </head>  
 	
   <body>
