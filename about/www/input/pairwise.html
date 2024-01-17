@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+		<style>
+			td {padding:0.5em;}
+			code { white-space: pre; }
+
+			.opt {
+				text-align: center;
+			}		
+
+			.desc {
+				text-align: left;
+				width: 50%;
+			}
+
+			.desc_table {
+				text-align: left;
+				width: 70%;
+			}
+
+		</style>
+    </head>  
+    <body>
+		<div class = "well">
+			<h4>Accepted File Formats</h4>
+			
+			<ul>
+				<li>Generic data table</li>
+					<ul>
+						<li>Comma-Separated Value with extension <em>.csv</em></li>
+						<li>Tab separated with extensions <em>.txt</em>, <em>.dat</em>, <em>.tsv</em>, or <em>.tab</em></li>
+						<li>First sheet of an Excel workbook with extension <em>.xls</em> or <em>.xlsx</em></li>
+					</ul>
+				<li>PDB file upload</li>
+					<ul>
+						<li>Protein Data Bank file, as used by the <a href="http://www.rcsb.org" target="_blank">RCSB Protein Data Bank</a>.
+						The atom coordinates from the first chain are used.
+						A distance matrix of the protein's coordinates can provide insight into the protein's structure.
+						</li>
+					</ul>
+				<li>Multi-FASTA file upload</li>
+					<ul>
+						<li>Users can upload a set of DNA sequences in a single file in
+						<a href="http://www.metagenomics.wiki/tools/fastq/multi-fasta-format" target="_blank">multi-FASTA format</a>.
+						Heatmapper will compute k-mer frequencies for each sequence, which may be
+						compared in a distance matrix for the purpose of alignment-free phylogenetic analysis.</li>
+					</ul>
+			</ul>
+			
+			<br />
+			<h4>Data Structure</h4>
+			
+			<ul>
+				<li>For distance matrix calculation: File should contain n data columns, where n &ge; 1, with each row representing a point in n-dimensional space.</li>
+				<li>For correlation matrix calculation: File should contain n data columns, where n &gt; 1, with columns representing variables whose correlations to one another will be calculated.</li>
+				<li>Note on labels: Optionally, the first row and/or first column may consist of data labels. If both contain data labels, a label of some sort (which will not be displayed) must also be present in the upper-left cell.
+				If any non-numeric values are present in the first row or column, data labels are assumed to be present. If only numeric data labels are present, select the appropriate check box so that they are treated as labels.
+				</li>
+			</ul>
+			
+			<br />
+			<h4>Acceptable Data Values</h4>
+			
+			<ul>
+				<li>Any real numbers.</li>
+				<li>For distance matrix calculation: Input data can have up to 300 rows and 500 columns.</li>
+				<li>For correlation matrix calculation: Input data can have up to 500 rows and 300 columns.</li>
+			</ul>
+			
+			<br />
+			<h4>Examples</h4>
+
+			<h5>For Distance Matrix</h5>
+
+			The distance matrix option calculates all pairwise distances between spatial points
+			(in rows) and presents the distances as a matrix.<br /><br />
+
+			Download an example input file <a href="examples/pairwise_dm_example1.txt" target="_blank">here</a>.
+			<br /><br />
+
+			Example 1:<br />
+
+<code style="white-space: pre;">
+27.340	24.430	2.614
+26.266	25.413	2.842
+26.913	26.639	3.531
+27.886	26.463	4.263
+25.112	24.880	3.649
+</code>
+
+			<br />
+			Example 2:<br />
+
+<code style="white-space: pre;">
+placeholderLabel	x	y	z
+point1	27.340	24.430	2.614
+point2	26.266	25.413	2.842
+point3	26.913	26.639	3.531
+point4	27.886	26.463	4.263
+point5	25.112	24.880	3.649
+</code>
+
+			<br />
+			In this second example, we have included labels in both the header and first column, but
+			labels in only the header or only the first column are also acceptable.
+
+			<br /><br />
+			<h5>For Correlation Matrix</h5>
+
+			The correlation matrix option calculates all correlations between pairs of variables
+			(in columns) and presents the correlation values as a matrix.<br /><br />
+
+			Download an example input file <a href="examples/pairwise_corr_example1.txt" target="_blank">here</a>.
+			<br /><br />
+
+			Example 1:<br />
+			
+<code style="white-space: pre;">
+SAMPLE	depth (m)	pH	temp (C)	biomass (ug/kg)
+sample0001	0.500	6.3	5.43	8.1
+sample0002	1.000	6.4	4.29	7.5
+sample0003	2.000	6.5	3.65	6.3
+sample0004	5.000	6.9	3.19	5.6
+sample0005	10.000	7.1	2.80	5.9
+</code>
+
+		</div>
+<div>
+<h5>An example of pairwise functionality: Dairy cows diet</h5>
+<p>You may use the following data file for this example - Metabolite concentrations of 39 rumen samples measured by proton NMR from dairy cows fed with different proportions of barley grain (Ametaj BN, et al. (2010) "Metabolomics reveals unhealthy alterations in rumen metabolism with increased proportion of cereal grain in the diet of dairy cows", Metabolomics 6-4:583-594). Group label - 0, 15, 30, or 45 - indicating the percentage of grain in diet.</p>
+
+<a href="CowDiet.csv" download><p>CowDiet.csv</p>
+</a>
+<br></br>
+<p>Click on the <strong>Pairwise</strong> tab on the main header and select the Upload File radio button, followed by the Choose File button. The following plot is created. Note that there are two <strong>Upload Format</strong> options, <strong>Generic Data Table</strong> and <strong>PDB Format</strong>. For this example, 'Generic Data Table' is set.</p>
+<br></br>
+<center><img src="images/HMP1.png" width="70%" height="70%"</body></img></center>
+<br></br>
+
+<p class="opt">The following menu shows the available options. Each option is reviewed below.</p>
+<br></br>
+<center><img src="images/HMP2.png" width="40%" height="40%"</body></img></center>
+<br></br>
+
+<center>
+<p class="desc"><strong>Labels in First Row</strong> and <strong>Labels in First Column:</strong> Treat entries of the first row or column in the data as headers. For this example, the file has only numeric values in the first row and Heatmapper thinks they are data values. To treat them as header values, the 'Lables in First Row' is selected.</p>
+</center>
+<br></br>
+
+
+<center><img src="images/HMP3.png" width="50%" height="50%"</body></img>
+<p class="desc"><strong>Choose Matrix Type to Calculate:</strong> There are three matrix options that can be used. With the Distance Matrix (the default matrix used as seen for the first image on this page), each row is treated as a point, and Euclidean distances between points are calculated. With the Correlation Matrix, correlations between the variables in each data column are calculated. This plot is created with this option.</p>
+</center>
+<br></br>
+
+<center><img src="images/HMP4.png" width="50%" height="50%"</body></img>
+<p class="desc">With the <strong>Display Data As-Is</strong> option, no matrix is applied and the values are directly mapped on the plot.</p>
+</center>
+<br></br>
+
+<center><img src="images/HMP12.png" width="50%" height="50%"</body></img>
+<p class="desc"><strong>Set Aspect Ratio = 1:</strong> This option is set by default, with a ratio of 1. The aspect ratio describes the proportional relationship between the image height and width. By unchecking the option, the resulting plot has a less proportional width vs height layout. Compare with the plot above.</p>
+</center>
+<br></br>
+
+<center><img src="images/HMP5.png" width="50%" height="50%"</body></img>
+<p class="desc"><strong>Show/Hide Layers:</strong> Add or remove heatmap layers to display or remove certain features of the plot, such as the Legend, or the Axis Labels. For example, removing the 'Axis Label' layer will only display the plot cells without the labels.</p>
+</center>
+<br></br>
+
+<center><img src="images/HMP6.png" width="50%" height="50%"</body></img>
+<p class="desc"><strong>Number of Shades:</strong> Adjust the number of colors to be used for the plot. A lower value, such as '3', would categorize the data within larger ranges based on color. As shown in the image, a general distribution of the values is more readily visible. A higher value, on the other hand, would use more colors for smaller ranges of the dataset.</p>
+</center>
+<br></br>
+
+<center><img src="images/HMP7.png" width="50%" height="50%"</body></img>
+<p class="desc"><strong>Color Scheme:</strong> Change the color progression scheme. The two options besides 'Custom' are 'Rainbow' and 'Topo'. The 'Custom' view uses the 'Low Color' and 'High Color' settings to create a gradient for value ranges. The <strong>Rainbow</strong> scheme does not use a color gradient, but instead assigns rainbow colors to different value ranges, as shown in the image.</p>
+</center>
+<br></br>
+
+<center><img src="images/HMP8.png" width="50%" height="50%"</body></img>
+<p class="desc">Similarly, the <strong>Topo</strong> color scheme assigns a different color to each value range, with lighter colors representing higher values.</p>
+</center>
+<br></br>
+
+<center><img src="images/HMP9.png" width="50%" height="50%"</body></img>
+<p class="desc">For the <strong>Custom</strong> color scheme, the user may change the colors of the gradient. For example, by clicking on the <strong>Low Color</strong> colored box and choosing a yellow value from the palette, as well as a purple <strong>High Color</strong>, the gradient is changed as shown on the plot and the contrast is improved.</p>
+</center>
+<br></br>
+
+<center><img src="images/HMP10.png" width="50%" height="50%"</body></img>
+<p class="desc"><strong>Reverse Data Order:</strong> Change the order of the x and y axes values. The plot is reversed, as shown in the image (compare with the first image on this page).</p>
+</center>
+<br></br>
+
+<p>There are two Download options that may be used to download the map/data at any step during the experience. The <strong>Plot</strong> option will download the plot image as seen on the webpage. The <strong>Table</strong> option will download the raw data in table format, with values for each row/column pair.</p>
+
+
+
+<p class="opt">Further fine tuning may be performed with the <strong>Show Advanced Options</strong> tab. The five available options are described below.</p>
+<br></br>
+
+<center><img src="images/HMArrow.png" width="40%" height="40%"</body></img>
+<p></p>
+</center>
+
+<center><img src="images/HMPAdvanced.png" width="40%" height="40%"</body></img>
+</center>
+<br></br>
+
+<center>
+<p class="desc"><strong>Plot Width:</strong> Adjust the size of the plot in the horizontal direction. A larger plot has better resolution.</p>
+<p class="desc"><strong>Plot Height:</strong> Adjust the size of the plot in the vertical direction.</p>
+</center>
+<br></br>
+
+<center><img src="images/HMP11.png" width="50%" height="50%"</body></img>
+<p class="desc"><strong>Title:</strong> Name the plot.</p>
+<p class="desc"><strong>X Axis Label:</strong> Name the x-axis.</p>
+<p class="desc"><strong>Y Axis Label:</strong> Name the y-axis.</p>
+</center>
+<br></br>
+
+<center><img src="images/HMP13.png" width="70%" height="70%"</body></img>
+<p class="desc_table">To view a section of the plot in more detail click on the <strong>Interactive</strong> tab next to the 'Plot' tab. Click and drag a portion of the plot to zoom in (by clicking once more anywhere on the plot, it will zoom back out). Hovering over the plot will display specific cell information, as shown in the image.</p>
+</center>
+<br></br>
+
+
+<center><img src="images/HMP14.png" width="70%" height="70%"</body></img>
+<p class="desc_table">The user may also view the data in table format, by clicking the <strong>Table</strong> plot tab next to the 'Interactive' tab.</p>
+</center>
+<br></br>
+
+<center><img src="images/HMP15.png" width="70%" height="70%"</body></img>
+<p class="desc_table">The user may search the Table values, using the <strong>Search</strong> box at the top of the table, or the column specific search boxes directly below the table. For example, by entering a correlation coefficient value of '4656' in the main search box, all rows and columns that contain that value are retrieved.</p>
+</center>
+<br></br>
+
+<center><img src="images/HMP16.png" width="70%" height="70%"</body></img>
+<p class="desc_table">The Table can be sorted by any one of the columns, using the arrows next to each header. For example, by cliking twice on the '0_1_1' arrow, the table is sorted in decreasing order of values for the '0_1_1' sample column.</p>
+</center>
+
+<br></br><br></br>
+</div>
+    </body>
+</html>

@@ -18,15 +18,15 @@ def server(input: Inputs, output: Outputs, session: Session):
 			ui.navset_tab(
 					ui.nav_panel(
 						"File Input",
-						ui.HTML(information[input.NavigationPanel()])
+						ui.HTML("../www/input/" + input.NavigationPanel() + ".html")
 					),
 					ui.nav_panel(
 						"Features",
-						ui.HTML(features[input.NavigationPanel()])
+						ui.HTML("../www/features/" + input.NavigationPanel() + ".html")
 					),
 					ui.nav_panel(
 						"Gallery / Links",
-						ui.HTML(gallery[input.NavigationPanel()])
+						ui.HTML("../www/gallery/" + input.NavigationPanel() + ".html")
 					)
 			),
 		)
