@@ -21,7 +21,12 @@ introduction = """
 		<script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
 		
 		<script>
-			$(function(){$("#introduction").load("../../www/input/introduction.html"}); 
+			$(function(){ 
+				$("#navbar").load("../../../www/navbar.html", function(){ 
+					$('#aboutTab').addClass('active');
+					$('#heatmapper-logo').on('click', function(){ window.location.href = '/'; });
+				});
+			}); 
 		</script>
 		
 		<script type="text/javascript" src="../../../www/js/google-analytics.js"></script>
