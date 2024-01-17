@@ -8,6 +8,32 @@ from features import features
 from information import information
 from gallery import gallery
 
+load = """
+<html>
+  <head>
+		<meta charset="UTF-8">
+		
+		<title>Contact</title>
+        
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"/>
+		
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+		<script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+		
+		<script>
+			$(function(){ 
+				$("#navbar").load("../../../www/navbar.html", function(){ 
+					$('#aboutTab').addClass('active');
+					$('#heatmapper-logo').on('click', function(){ window.location.href = '/'; });
+				});
+			}); 
+		</script>
+		
+		<script type="text/javascript" src="../../../www/js/google-analytics.js"></script>
+		
+  </head>  
+"""
+
 def server(input: Inputs, output: Outputs, session: Session):
 
 	@output
@@ -18,15 +44,15 @@ def server(input: Inputs, output: Outputs, session: Session):
 			ui.navset_tab(
 					ui.nav_panel(
 						"File Input",
-						ui.HTML(open("../../www/input/" + input.NavigationPanel() + ".html").read())
+						#ui.HTML(open("../../www/input/" + input.NavigationPanel() + ".html").read())
 					),
 					ui.nav_panel(
 						"Features",
-						ui.HTML(open("../../www/features/" + input.NavigationPanel() + ".html").read())
+						#ui.HTML(open("../../www/features/" + input.NavigationPanel() + ".html").read())
 					),
 					ui.nav_panel(
 						"Gallery / Links",
-						ui.HTML(open("../www/gallery/" + input.NavigationPanel() + ".html").read())
+						#ui.HTML(open("../www/gallery/" + input.NavigationPanel() + ".html").read())
 					)
 			),
 		)
@@ -34,6 +60,8 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 app_ui = ui.page_fluid(
 	ui.panel_title(ui.HTML('<a href="https://kkernick.github.io">Heatmapper</a>')),
+
+	ui.HTML(load),
 	ui.layout_sidebar(
 		ui.sidebar(
 
