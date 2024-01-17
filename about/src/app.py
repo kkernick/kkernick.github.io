@@ -15,7 +15,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 	@reactive.event(input.NavigationPanel)
 	def Tab():
 		return ui.TagList(
-			ui.navset_tab(cd 
+			ui.navset_tab(
 					ui.nav_panel(
 						"File Input",
 						ui.HTML(open("../../www/input/" + input.NavigationPanel() + ".html").read())
