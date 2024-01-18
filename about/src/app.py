@@ -8,26 +8,24 @@ from features import features
 from information import information
 from gallery import gallery
 
-def fetch_page(www_page: str):
- 	return ui.HTML("""
-		<!DOCTYPE html>
-		<html>
-			<head>	
-				<script>
-					$(function(){ 
-						$("#navbar").load("../../www/""" + www_page + """.html");
-					}); 
-				</script>
-			</head>  
-			
-			<body>
-				<div id="navbar"></div>
-			</body>
-		</html>
-	""")
-	
 
 def server(input: Inputs, output: Outputs, session: Session):
+
+	def fetch_page(www_page):
+		return ui.HTML("""
+			<!DOCTYPE html>
+			<html>
+				<head>	
+					<script>
+						$(function(){ 
+							$("#panel").load("../../www/""" + www_page + """.html");
+						}); 
+					</script>
+				</head>  
+				
+				<div id="panel"></div>
+			</html>
+		""")
 
 	@output
 	@render.ui
@@ -46,7 +44,8 @@ def server(input: Inputs, output: Outputs, session: Session):
 					ui.nav_panel(
 						"Gallery / Links",
 						fetch_page("gallery/" + input.NavigationPanel())
-					)
+					),
+					id="Tab"
 			),
 		)
 
