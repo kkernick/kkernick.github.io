@@ -13,7 +13,7 @@ app_ui = ui.page_fluid(
 	ui.panel_title(ui.HTML('<a href="https://kkernick.github.io">Heatmapper</a>')),
 	ui.layout_sidebar(
 		ui.sidebar(
-			ui.HTML("<a href=../../about/site/index.html>Data Format</a>"),
+			ui.HTML("<a href=https://kkernick.github.io/about/site/index.html>Data Format</a>"),
 			id="SidebarPanel",
 			width=200
 		),
