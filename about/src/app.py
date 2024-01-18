@@ -11,24 +11,13 @@ from gallery import gallery
 introduction = """
 <!DOCTYPE html>
 <html>
-  <head>
-		<meta charset="UTF-8">
-		
-		<title>Contact</title>
-        
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"/>
-		
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
-		<script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
-		
+	<head>	
 		<script>
 			$(function(){ 
 				$("#navbar").load("../../www/input/introduction.html");
 			}); 
 		</script>
-		
-		<script type="text/javascript" src="../../../www/js/google-analytics.js"></script>
-  </head>  
+	</head>  
 	
   <body>
 		<div id="navbar"></div>
