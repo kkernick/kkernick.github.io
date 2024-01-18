@@ -15,7 +15,7 @@ def fetch_page(www_page: str):
 			<head>	
 				<script>
 					$(function(){ 
-						$("#navbar").load("../../www/{}}.html");
+						$("#navbar").load("../../www/""" + www_page + """.html");
 					}); 
 				</script>
 			</head>  
@@ -24,7 +24,7 @@ def fetch_page(www_page: str):
 				<div id="navbar"></div>
 			</body>
 		</html>
-	""".format(www_page))
+	""")
 	
 
 def server(input: Inputs, output: Outputs, session: Session):
@@ -37,15 +37,15 @@ def server(input: Inputs, output: Outputs, session: Session):
 			ui.navset_tab(
 					ui.nav_panel(
 						"File Input",
-						fetch_page("input" + input.NavigationPanel())
+						fetch_page("input/" + input.NavigationPanel())
 					),
 					ui.nav_panel(
 						"Features",
-						fetch_page("features" + input.NavigationPanel())
+						fetch_page("features/" + input.NavigationPanel())
 					),
 					ui.nav_panel(
 						"Gallery / Links",
-						fetch_page("gallery" + input.NavigationPanel())
+						fetch_page("gallery/" + input.NavigationPanel())
 					)
 			),
 		)
