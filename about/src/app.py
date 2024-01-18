@@ -8,18 +8,24 @@ from features import features
 from information import information
 from gallery import gallery
 
-introduction = """
-<!DOCTYPE html>
-<html>	
-  <body>
-		<script>
-			$(function(){ 
-				$("#navbar").load("../../www/input/introduction.html");
-			}); 
-		</script>
-	</body>
-</html>
-"""
+def fetch_page(www_page: str):
+ 	return ui.HTML("""
+		<!DOCTYPE html>
+		<html>
+			<head>	
+				<script>
+					$(function(){ 
+						$("#navbar").load("../../www/{}}.html");
+					}); 
+				</script>
+			</head>  
+			
+			<body>
+				<div id="navbar"></div>
+			</body>
+		</html>
+	""".format(www_page))
+	
 
 def server(input: Inputs, output: Outputs, session: Session):
 
@@ -31,22 +37,22 @@ def server(input: Inputs, output: Outputs, session: Session):
 			ui.navset_tab(
 					ui.nav_panel(
 						"File Input",
-						ui.HTML(introduction)
+						fetch_page("input" + input.NavigationPanel())
 					),
 					ui.nav_panel(
 						"Features",
-						#ui.HTML(open("../../www/features/" + input.NavigationPanel() + ".html").read())
+						fetch_page("features" + input.NavigationPanel())
 					),
 					ui.nav_panel(
 						"Gallery / Links",
-						#ui.HTML(open("../www/gallery/" + input.NavigationPanel() + ".html").read())
+						fetch_page("gallery" + input.NavigationPanel())
 					)
 			),
 		)
 
 
 app_ui = ui.page_fluid(
-	ui.panel_title(ui.HTML('<a href="https://kkernick.github.io">Heatmapper v2.5</a>')),
+	ui.panel_title(ui.HTML('<a href="https://kkernick.github.io">Heatmapper v2.7</a>')),
 	ui.layout_sidebar(
 		ui.sidebar(
 
