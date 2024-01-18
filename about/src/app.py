@@ -12,20 +12,7 @@ from gallery import gallery
 def server(input: Inputs, output: Outputs, session: Session):
 
 	def fetch_page(www_page):
-		return ui.HTML("""
-			<!DOCTYPE html>
-			<html>
-				<head>	
-					<script>
-						$(function(){ 
-							$("#panel").load("../../www/""" + www_page + """.html");
-						}); 
-					</script>
-				</head>  
-				
-				<div id="panel"></div>
-			</html>
-		""")
+		return ui.HTML(open("../../www/" + www_page + ".html").read())
 
 	@output
 	@render.ui
