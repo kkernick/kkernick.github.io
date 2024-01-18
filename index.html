@@ -88,9 +88,7 @@
 		
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
 		<script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
-		
-		<script> $(function(){ $("#navbar").load("www/navbar.html"); }); </script>
-		
+				
 		<script type="text/javascript" src="www/js/google-analytics.js"></script>
 
 		<script>
@@ -177,7 +175,40 @@
     </head>  
 	
     <body>
-		<div id="navbar"></div>
+		
+			<nav class="navbar navbar-default navbar-static-top" role="navigation">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#collapseNavbar">
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<span class = "navbar-brand" id="heatmapper-logo" style="cursor:pointer">Heatmapper</span>
+				</div>
+				<div class="collapse navbar-collapse" id="collapseNavbar">
+					<ul class="nav navbar-nav">
+						<li id="expressionTab">
+							<a id="expressionLink" href="expression">Expression</a>
+						</li>
+						<li id="pairwiseTab">
+							<a id="pairwiseLink" href="pairwise">Pairwise</a>
+						</li>
+						<li id="imageTab">
+							<a id="imageLink" href="image">Image Overlay</a>
+						</li>
+						<li id="geomapTab">
+							<a id="geomapLink" href="geomap">Geomap</a>
+						</li>
+						<li id="geocoordinateTab">
+							<a id="geocoordinateLink" href="geocoordinate">Geocoordinate</a>
+						</li>
+						<li id="aboutTab">
+							<a id="aboutLink" href="about/site/index.html">About</a>
+						</li>
+					</ul>
+				</div>
+			</nav>
+
 		<div class="myTable">
 			<h2 style="margin-left:0px; padding-left:1.9em;">Welcome to Heatmapper!</h2>
 			
