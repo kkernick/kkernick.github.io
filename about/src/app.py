@@ -12,7 +12,51 @@ from gallery import gallery
 def server(input: Inputs, output: Outputs, session: Session):
 
 	def fetch_page(www_page):
-		return ui.HTML(open("../../www/" + www_page + ".html").read())
+		return ui.HTML(
+			"""
+			<!DOCTYPE html>
+			<html>
+				<head>
+					<meta charset="UTF-8">
+					
+					<title>Contact</title>
+							
+					<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"/>
+					
+					<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+					<script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+					
+					<script>
+						$(function(){ 
+							$("#navbar").load("../../www/""" + www_page + """.html");
+						}); 
+					</script>
+					
+					<script type="text/javascript" src="../../../www/js/google-analytics.js"></script>
+					
+				</head>  
+				
+				<body>
+					<div id="navbar"></div>
+					<div class="container-fluid well">
+						<h2>Contact</h2>
+						Questions or comments? Please use our <a href="http://feedback.wishartlab.com/?site=heatmapper" target="_blank">feedback page</a>.
+						<br />
+						<br />
+						This project was developed in the <a href="http://www.wishartlab.com/" target="_blank">Wishart Research Group</a> at the University of Alberta.<br />
+						Financial support was provided by the <a href="http://www.cihr-irsc.gc.ca" target="_blank">Canadian Institutes of Health Research (CIHR)</a><br />
+						and by <a href="http://genomealberta.ca" target="_blank">Genome Alberta</a>, a division of Genome Canada.
+						<br />
+						Information on file format requirements can be found on the <a href="/about/instructions">Instructions Page</a>. 
+						<br />
+						All source code for this project can be found on <a href="https://github.com/sbabicki/heatmapper" target="_blank">GitHub</a>.
+						<br />
+						License: <a href="http://creativecommons.org/licenses/by-sa/2.0/" target="_blank">Creative Commons Attribution-ShareAlike 2.0 Generic</a>
+					</div>
+				</body>
+			</html>
+			"""
+		)
 
 	@output
 	@render.ui
@@ -38,7 +82,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 
 app_ui = ui.page_fluid(
-	ui.panel_title(ui.HTML('<a href="https://kkernick.github.io">Heatmapper v2.8</a>')),
+	ui.panel_title(ui.HTML('<a href="https://kkernick.github.io">Heatmapper v2.10</a>')),
 	ui.layout_sidebar(
 		ui.sidebar(
 
