@@ -6,7 +6,6 @@ import certifi, branca, xyzservices
 import folium
 from folium.plugins import HeatMap
 
-import numpy as np
 import pandas as pd
 
 from pathlib import Path
