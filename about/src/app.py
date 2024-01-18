@@ -10,17 +10,13 @@ from gallery import gallery
 
 introduction = """
 <!DOCTYPE html>
-<html>
-	<head>	
+<html>	
+  <body>
 		<script>
 			$(function(){ 
 				$("#navbar").load("../../www/input/introduction.html");
 			}); 
 		</script>
-	</head>  
-	
-  <body>
-		<div id="navbar"></div>
 	</body>
 </html>
 """
@@ -50,7 +46,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 
 app_ui = ui.page_fluid(
-	ui.panel_title(ui.HTML('<a href="https://kkernick.github.io">Heatmapper v2.4</a>')),
+	ui.panel_title(ui.HTML('<a href="https://kkernick.github.io">Heatmapper v2.5</a>')),
 	ui.layout_sidebar(
 		ui.sidebar(
 
