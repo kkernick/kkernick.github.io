@@ -94,8 +94,8 @@ gallery = {
 				<div class="well myCol">
 					<figure>
 						
-						<a href="http://heatmapper.ca/about/gallery/images/HME1.png">
-							<img src="http://heatmapper.ca/about/gallery/images/HME1_low.png" alt="Example 1" class="border-img">
+						<a href="../../www/gallery/images/HME1.png">
+							<img src="../../www/gallery/images/HME1_low.png" alt="Example 1" class="border-img">
 						</a>
 						
 						<figcaption>
@@ -113,8 +113,8 @@ gallery = {
 				<div class="well myCol">
 					<figure>
 						
-						<a href="http://heatmapper.ca/about/gallery/images/HME2.png">
-							<img src="http://heatmapper.ca/about/gallery/images/HME2_low.png" alt="Example 2" class="border-img">
+						<a href="../../www/gallery/images/HME2.png">
+							<img src="../../www/gallery/images/HME2_low.png" alt="Example 2" class="border-img">
 						</a>
 						
 						<figcaption>
@@ -132,8 +132,8 @@ gallery = {
 				<div class="well myCol">
 					<figure>
 						
-						<a href="http://heatmapper.ca/about/gallery/images/HME3.png">
-							<img src="http://heatmapper.ca/about/gallery/images/HME3_low.png" alt="Example 3" class="border-img">
+						<a href="../../www/gallery/images/HME3.png">
+							<img src="../../www/gallery/images/HME3_low.png" alt="Example 3" class="border-img">
 						</a>
 						
 						<figcaption>
@@ -204,8 +204,8 @@ gallery = {
 				<div class="well myCol">
 					<figure>
 						
-						<a href="http://heatmapper.ca/about/gallery/images/HMC1.png">
-							<img src="http://heatmapper.ca/about/gallery/images/HMC1_low.png" alt="Example 1" class="border-img">
+						<a href="../../www/gallery/images/HMC1.png">
+							<img src="../../www/gallery/images/HMC1_low.png" alt="Example 1" class="border-img">
 						</a>
 						
 						<figcaption>
@@ -228,8 +228,8 @@ gallery = {
 				<div class="well myCol">
 					<figure>
 						
-						<a href="http://heatmapper.ca/about/gallery/images/HMC2.png">
-							<img src="http://heatmapper.ca/about/gallery/images/HMC2_low.png" alt="Example 2" class="border-img">
+						<a href="../../www/gallery/images/HMC2.png">
+							<img src="../../www/gallery/images/HMC2_low.png" alt="Example 2" class="border-img">
 						</a>
 						
 						<figcaption>
@@ -250,8 +250,8 @@ gallery = {
 				<div class="well myCol">
 					<figure>
 						
-						<a href="http://heatmapper.ca/about/gallery/images/HMC3.png">
-							<img src="http://heatmapper.ca/about/gallery/images/HMC3_low.png" alt="Example 3" class="border-img">
+						<a href="../../www/gallery/images/HMC3.png">
+							<img src="../../www/gallery/images/HMC3_low.png" alt="Example 3" class="border-img">
 						</a>
 						
 						<figcaption>
@@ -322,8 +322,8 @@ gallery = {
 				<div class="well myCol">
 					<figure>
 						
-						<a href="http://heatmapper.ca/about/gallery/images/HMG1.png">
-							<img src="http://heatmapper.ca/about/gallery/images/HMG1_low.png" alt="Example 1" class="border-img">
+						<a href="../../www/gallery/images/HMG1.png">
+							<img src="../../www/gallery/images/HMG1_low.png" alt="Example 1" class="border-img">
 						</a>
 						
 						<figcaption>
@@ -342,8 +342,8 @@ gallery = {
 				<div class="well myCol">
 					<figure>
 						
-						<a href="http://heatmapper.ca/about/gallery/images/HMG2.png">
-							<img src="http://heatmapper.ca/about/gallery/images/HMG2_low.png" alt="Example 2" class="border-img">
+						<a href="../../www/gallery/images/HMG2.png">
+							<img src="../../www/gallery/images/HMG2_low.png" alt="Example 2" class="border-img">
 						</a>
 						
 						<figcaption>
@@ -365,8 +365,8 @@ gallery = {
 				<div class="well myCol">
 					<figure>
 						
-						<a href="http://heatmapper.ca/about/gallery/images/HMG3.png">
-							<img src="http://heatmapper.ca/about/gallery/images/HMG3_low.png" alt="Example 3" class="border-img">
+						<a href="../../www/gallery/images/HMG3.png">
+							<img src="../../www/gallery/images/HMG3_low.png" alt="Example 3" class="border-img">
 						</a>
 						
 						<figcaption>
@@ -437,8 +437,8 @@ gallery = {
 				<div class="well myCol">
 					<figure>
 						
-						<a href="http://heatmapper.ca/about/gallery/images/HMI1.png">
-							<img src="http://heatmapper.ca/about/gallery/images/HMI1_low.png" alt="Example 1" class="border-img">
+						<a href="../../www/gallery/images/HMI1.png">
+							<img src="../../www/gallery/images/HMI1_low.png" alt="Example 1" class="border-img">
 						</a>
 						
 						<figcaption>
@@ -457,8 +457,8 @@ gallery = {
 				<div class="well myCol">
 					<figure>
 						
-						<a href="http://heatmapper.ca/about/gallery/images/HMI2.png">
-							<img src="http://heatmapper.ca/about/gallery/images/HMI2_low.png" alt="Example 2" class="border-img">
+						<a href="../../www/gallery/images/HMI2.png">
+							<img src="../../www/gallery/images/HMI2_low.png" alt="Example 2" class="border-img">
 						</a>
 						
 						<figcaption>
@@ -527,8 +527,8 @@ gallery = {
 				<div class="well myCol">
 					<figure>
 						
-						<a href="http://heatmapper.ca/about/gallery/images/HMP1.png">
-							<img src="http://heatmapper.ca/about/gallery/images/HMP1_low.png" alt="Example 1" class="border-img">
+						<a href="../../www/gallery/images/HMP1.png">
+							<img src="../../www/gallery/images/HMP1_low.png" alt="Example 1" class="border-img">
 						</a>
 						
 						<figcaption>
@@ -545,8 +545,8 @@ gallery = {
 				<div class="well myCol">
 					<figure>
 						
-						<a href="http://heatmapper.ca/about/gallery/images/HMP2.png">
-							<img src="http://heatmapper.ca/about/gallery/images/HMP2_low.png" alt="Example 2" class="border-img">
+						<a href="../../www/gallery/images/HMP2.png">
+							<img src="../../www/gallery/images/HMP2_low.png" alt="Example 2" class="border-img">
 						</a>
 						
 						<figcaption>
@@ -565,8 +565,8 @@ gallery = {
 				<div class="well myCol">
 					<figure>
 						
-						<a href="http://heatmapper.ca/about/gallery/images/HMP3.png">
-							<img src="http://heatmapper.ca/about/gallery/images/HMP3_low.png" alt="Example 3" class="border-img">
+						<a href="../../www/gallery/images/HMP3.png">
+							<img src="../../www/gallery/images/HMP3_low.png" alt="Example 3" class="border-img">
 						</a>
 						
 						<figcaption>
