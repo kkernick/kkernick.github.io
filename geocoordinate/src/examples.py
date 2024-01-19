@@ -1,5 +1,21 @@
 examples = {
-"Example 1": """
+"Example 1": {
+"info": """
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+    </head>  
+    <body>
+         This example dataset shows deaths from a <a href="https://en.wikipedia.org/wiki/1854_Broad_Street_cholera_outbreak">cholera outbreak in 1854</a>. 
+		 <a href="https://en.wikipedia.org/wiki/John_Snow_(physician)">John Snow</a> used this data in conjunction with local pump locations as evidence that cholera is spread by contaminated water. 
+		 A <a href="https://www.google.com/fusiontables/DataSource?docid=147wlDisDp6NnpNxHQpbnjAQ-iW4dR2MAmFdQxYc#map:id=3">
+			 digitised version of the data</a> is available online, courtesy of Robin Wilson (robin@rtwilson.com).
+    </body>
+</html>
+""",
+
+"data": """
 Value	Longitude	Latitude
 3	-0.13793	51.513418
 2	-0.137883	51.513361
@@ -251,9 +267,24 @@ Value	Longitude	Latitude
 1	-0.138474	51.512311
 1	-0.138123	51.511998
 1	-0.137762	51.511856
+"""},
+
+"Example 2": {
+"info": """
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+    </head>  
+    <body>
+        This example data set shows bike thefts in Vancouver in 2011.
+		The data was obtained from a 2013 <a href="http://blogs.vancouversun.com/2013/12/27/get-the-raw-data-for-our-bike-theft-and-auto-crime-series-right-here/">
+			Vancouver Sun blog post</a> by Chad Skelton.
+    </body>
+</html>
 """,
 
-"Example 2": """
+"data": """
 Latitude	Longitude	Year
 49.2811663	-123.1162367	2011
 49.2796864	-123.1075819	2011
@@ -1773,9 +1804,24 @@ Latitude	Longitude	Year
 49.2764821	-123.1156081	2011
 49.2378053	-123.0310314	2011
 49.258114	-123.2030522	2011
-""",
+"""},
 
-"Example 3": """
+"Example 3": {
+"info": """
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+    </head>  
+    <body>
+        This example data set shows the location of traffic signals in Toronto. 
+		The data was obtained from <a href="http://www.toronto.ca/open">Toronto Open Data</a>.
+		The idea to use this data set comes from this <a href="http://www.r-bloggers.com/heatmap-of-toronto-traffic-signals-using-rgooglemaps/">R-bloggers post</a> 
+			by Myles Harrison.
+    </body>
+</html>
+""",
+"data": """
 Latitude	Longitude
 43.649418	-79.371446
 43.6504606	-79.3719239
@@ -2876,4 +2922,4 @@ Latitude	Longitude
 43.76658	-79.4122
 43.76328	-79.41135
 """
-}
+}}
