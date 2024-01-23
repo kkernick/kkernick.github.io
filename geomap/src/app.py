@@ -77,7 +77,8 @@ def server(input: Inputs, output: Outputs, session: Session):
 					fill_color='YlGn',
 					fill_opacity=input.Opacity(),
 					line_opacity=input.Opacity(),
-					legend_name='Legend'
+					legend_name='Legend',
+					bins=input.Bins()
 			).add_to(map)
 		return map
 
@@ -183,6 +184,8 @@ app_ui = ui.page_fluid(
 			ui.input_radio_buttons(id="MapType", label="Map Type", choices=["OpenStreetMap", "CartoDB Positron"], selected="CartoDB Positron"),
 
 			ui.input_slider(id="Opacity", label="Heatmap Opacity", value=0.5, min=0.0, max=1.0, step=0.1),
+			ui.input_slider(id="Bins", label="Number of Colors", value=8, min=3, max=12, step=1),
+
 
 			ui.br(),
 
