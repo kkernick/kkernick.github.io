@@ -1,60 +1,88 @@
+#
+# Heatmapper
+# Pairwise
+#
+# This file contains the ShinyLive application for Pairwise Heatmapper.
+# It can be run with the following command within this directory:
+#		shinylive export . [site]
+# Where [site] is the destination of the site folder.
+#
+# If you would rather deploy the application as a PyShiny application,
+# run the following command within this directory:
+#		shiny run
+#
+# Last Modified: 2024/02/03
+#
+
+
 from shiny import App, Inputs, Outputs, Session, reactive, render, ui
 from shiny.types import FileInfo
-
-import pandas as pd
-import numpy as np
-
-import matplotlib.pyplot as plt
+from matplotlib.pyplot import subplots, colorbar
 from matplotlib.backends.backend_agg import FigureCanvasAgg
-
-
 from scipy.spatial.distance import pdist, squareform
-
 from Bio.PDB import PDBParser
+from io import BytesIO
+from sys import modules
+from pathlib import Path
+from pandas import DataFrame, read_csv, read_excel, read_table
 
-from io import StringIO, BytesIO
 
-Cached = None
-Filename = None
+# Interoperability between ShinyLive and PyShiny
+if "pyodide" in modules:
+	from pyodide.http import pyfetch
+	Source = "https://raw.githubusercontent.com/kkernick/kkernick.github.io/main/pairwise/example_input/"
+	async def download(url): r = await pyfetch(url); return await r.bytes() if r.ok else None
+else:
+	from os.path import exists
+	Source = "../example_input/"
+	async def download(url): return open(url, "rb").read() if exists(url) else None
+
 
 def server(input: Inputs, output: Outputs, session: Session):
+	# Cache for examples. We can't assume users will have unique file names, so we cannot use the cache for
+	# Uploaded files. Regardless, this prevents the application from fetching the example every time its needed.
+	Cache = {}
 
-	# Returns the data of whatever we should generate our map off of.
-	def LoadData():
-		global Cached, Filename
+	# Information about the Examples
+	Info = {
+		"example1.txt": "This example dataset represents pairwise distances between C-alpha atoms in ubiquitin (1ubq).",
+		"example2.txt": "This example dataset was generated randomly.",
+		"example3.txt": "This example dataset was generated randomly."
+	}
 
-		# To work well with StringIO
-		ext = ""
 
-		# If we have an upload file, try and open it.
+	async def LoadData():
+		"""
+		@brief Returns a table containing the pairwise matrix.
+		@returns	A DataFrame containing the data requested, formatted as a pairwise matrix, or
+							an empty DataFrame if we're on Upload, but the user has not supplied a file.
+		"""
+
+		# Grab an uploaded file, if its done, or grab an example (Using a cache to prevent redownload)
 		if input.SourceFile() == "Upload":
 			file: list[FileInfo] | None = input.File()
 			if file is None:
-					return pd.DataFrame()
+					return DataFrame()
+			n = file[0]["name"]
 			f = file[0]["datapath"]
-			ext = f
 		else:
-			# TODO: Actually implement the example
-			return pd.DataFrame()
+			n = input.Example()
+			f = Cache[n] if n in Cache else BytesIO(await download(Source + input.Example()))
 
-		if Filename == f and Cached is not None:
-			return Cached
-		else:
-			Filename = f
-
-			# Handle extensions.
-			if ext.endswith(".csv"):
-				Cached = ChartMatrix(pd.read_csv(f))
-			elif ext.endswith(".xlsx"):
-				Cached = ChartMatrix(pd.read_xlsx(f))
-			elif ext.endswith(".pdb"):
-				Cached = PDBMatrix(f)
-			else:
-				Cached = ChartMatrix(pd.read_table(f))
-			return Cached
+		match Path(n).suffix:
+			case ".csv": return ChartMatrix(read_csv(f))
+			case ".xlsx": return ChartMatrix(read_excel(f))
+			case ".pdb": return PDBMatrix(f)
+			case _: return ChartMatrix(read_table(f))
 
 
 	def PDBMatrix(file):
+		"""
+		@brief Generates a pairwise matrix from a PDB file
+		@param file: The path to a PDB file (Or BytesIO file if applicable)
+		@returns The pairwise matrix.
+		"""
+
 		parser = PDBParser()
 		structure = parser.get_structure('protein', file)
 
@@ -67,60 +95,83 @@ def server(input: Inputs, output: Outputs, session: Session):
 									for atom in residue:
 											coordinates.append(atom.coord)
 
-		# Calculate pairwise Euclidean distances
+		# Calculate pairwise distances
 		distances = pdist(coordinates, metric=input.DistanceMethod().lower())
 		distance_matrix = squareform(distances)
 
-		return pd.DataFrame(distance_matrix)
+		return DataFrame(distance_matrix)
 
 
 	def ChartMatrix(df):
+		"""
+		@brief Generates a pairwise matrix from charts
+		@param df:	The DataFrame containing the data. This can either be a chart
+								containing {x,y,z} columns outlining each point on a row, with
+								an optional name column (Any fourth column), a chart to which
+								an explicit "Name" column is provided, to which the first row
+								and column are assumed variable names for an existing matrix,
+								or the default, where it is assumed that the chart is an
+								unlabeled collection either of points, or an existing matrix.
+		@returns A DataFrame containing the provided data as a pairwise matrix
+		"""
+
+		# If "Name" is found, its assumed to be the label for the points.
 		if "Name" in df:
-			distance_matrix = df.iloc[:, 1:].values
 			point_names = df["Name"]
 
-		else:
-			if 'x' in df.columns and 'y' in df.columns and 'z' in df.columns:
-				coordinates = df[['x', 'y', 'z']].values
-				point_names = df[list(set(df.columns) - set(['x', 'y', 'z']))[0]].values
-			else:
-				# This will either handle a 
-				coordinates = df.iloc[:, 1:].values
-				point_names = None
+		# If explicit coordinates ar eprovided, use them, with the final column used as labels.
+		if 'x' in df.columns and 'y' in df.columns and 'z' in df.columns:
+			coordinates = df[['x', 'y', 'z']].values
+			point_names = df[list(set(df.columns) - set(['x', 'y', 'z']))[0]].values
 
+		# Magic. How this handles all other cases I don't know, but it somehow works.
+		else:
+			coordinates = df.iloc[:, 1:].values
+			point_names = None
+
+		# Calculate a distant matrix, and return it
 		distances = pdist(coordinates, metric=input.DistanceMethod().lower())
 		distance_matrix = squareform(distances)
+		return DataFrame(distance_matrix, index=point_names, columns=point_names)
 
-		return pd.DataFrame(distance_matrix, index=point_names, columns=point_names)
 
+	async def GenerateHeatmap():
+		"""
+		@brief Generates the Heatmap
+		@returns The heatmap
+		"""
 
-	def GenerateHeatmap():
-		df = LoadData()
-
-		fig, ax = plt.subplots()
+		df = await LoadData()
+		fig, ax = subplots()
 
 		im = ax.imshow(df, cmap=input.ColorMap().lower(), interpolation=input.Interpolation().lower())
-		plt.colorbar(im, label="Distance")
+		colorbar(im, label="Distance")
 
 		return ax
 
+
 	@output
 	@render.table
-	def LoadedTable():
-		return LoadData()
+	async def LoadedTable(): return await LoadData()
+
 
 	@output
 	@render.plot
-	def Heatmap():
-		return GenerateHeatmap()
+	async def Heatmap(): return await GenerateHeatmap()
+
+	@output
+	@render.text
+	def ExampleInfo():
+		return Info[input.Example()]
+
 
 	@session.download(filename="table.csv")
-	def DownloadTable():
-		yield LoadData().to_string()
+	async def DownloadTable(): yield await LoadData().to_string()
+
 
 	@session.download(filename="heatmap.png")
-	def DownloadHeatmap():
-		ax = GenerateHeatmap()
+	async def DownloadHeatmap():
+		ax = await GenerateHeatmap()
 
 		output = BytesIO()
 		FigureCanvasAgg(ax.figure).print_png(output)
@@ -130,8 +181,20 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 
 app_ui = ui.page_fluid(
-	# Place the Heatmapper Home on the top.
-	ui.panel_title(ui.HTML('<a href="https://kkernick.github.io">Heatmapper</a>')),
+
+	# Welcome back, NavBar :)
+	ui.panel_title(title=None, window_title="Heatmapper"),
+	ui.navset_bar(
+		ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/expression/site/index.html>Expression</a>"), value="Expression"),
+		ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/pairwise/site/index.html>Pairwise</a>"), value="Pairwise"),
+		ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/image/site/index.html>Image</a>"), value="Image"),
+		ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/geomap/site/index.html>Geomap</a>"), value="Geomap"),
+		ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/geocoordinate/site/index.html>Geocoordinate</a>"), value="Geocoordinate"),
+		ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/about/site/index.html>About</a>"), value="About"),
+		title="Heatmapper",
+		selected="Pairwise",
+	),
+
 	ui.layout_sidebar(
 		ui.sidebar(
 
@@ -139,15 +202,28 @@ app_ui = ui.page_fluid(
 			ui.HTML("<a href=https://kkernick.github.io/about/site/index.html>Data Format</a>"),
 
 			# Specify whether to use example files, or upload one.
-			ui.input_radio_buttons(id="SourceFile", label="Specify a Source File", choices=["Example", "Upload"], selected="Example"),
+			ui.input_radio_buttons(id="SourceFile", label="Specify a Source File", choices=["Example", "Upload"], selected="Example", inline=True),
 
 			# Only display an input dialog if the user is one Upload
 			ui.panel_conditional(
 				"input.SourceFile === 'Upload'",
-				ui.input_file("File", "Choose a File", accept=[".csv", ".txt", "xlsx", ".pdb"], multiple=False),
+				ui.input_file("File", "Choose a File", accept=[".csv", ".txt", "xlsx", ".pdb", ".dat"], multiple=False),
 			),
 
-			ui.br(),
+			# Otherwise, add the example selection and an info button.
+			ui.panel_conditional(
+				"input.SourceFile === 'Example'",
+				"Choose an Example File",
+				ui.layout_columns(
+					ui.input_select(id="Example", label=None, choices={
+											"example1.txt": "Example 1",
+											"example2.txt": "Example 2",
+											"example3.txt": "Example 3",
+					}),
+					ui.popover(ui.input_action_link(id="ExampleInfoButton", label="Info"), ui.output_text("ExampleInfo")),
+					col_widths=[10,2],
+				)
+			),
 
 			# https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
 			ui.input_select(id="DistanceMethod", label="Distance Method", choices=[
@@ -157,11 +233,11 @@ app_ui = ui.page_fluid(
 			ui.input_select(id="Interpolation", label="Interpolation", choices=[
 				"None", "Antialiased", "Nearest", "Bilinear", "Bicubic", "Spline16", "Spline36", "Hanning", "Hamming", "Hermite", "Kaiser", "Quadric", "Catrom", "Gaussian", "Bessel", "Mitchell", "Sinc", "Lanczos", "Blackman"], selected="Nearest"),
 
+			# Set the ColorMap used.
 			ui.input_select(id="ColorMap", label="Color Map", choices=["Viridis", "Plasma", "Inferno", "Magma", "Cividis"], selected="Viridis"),
 
+			# Specify the PDB Chain
 			ui.input_text("Chain", "PDB Chain", "A"),
-
-			ui.br(),
 
 			# Add the download buttons.
 			ui.layout_columns(
@@ -175,16 +251,10 @@ app_ui = ui.page_fluid(
 
 		# Add the main interface tabs.
 		ui.navset_tab(
-
-				# The map
 				ui.nav_panel("Interactive", ui.output_plot("Heatmap", height="90vh")),
-
-				# The table
 				ui.nav_panel("Table", ui.output_table("LoadedTable"),),
 		),
-
-		height="100vh"
 	)
-)	
+)
 
 app = App(app_ui, server)
