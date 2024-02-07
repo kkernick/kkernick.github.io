@@ -161,8 +161,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 	@output
 	@render.text
-	def ExampleInfo():
-		return Info[input.Example()]
+	def ExampleInfo(): return Info[input.Example()]
 
 
 	@session.download(filename="table.csv")
@@ -230,8 +229,7 @@ app_ui = ui.page_fluid(
 				"Braycurtis", "Canberra", "Chebyshev", "Cityblock", "Correlation", "Cosine", "Dice", "Euclidean", "Hamming", "Jaccard", "Jensenshannon", "Kulczynski1", "Mahalanobis", "Matching", "Minkowski", "Rogerstanimoto", "Russellrao", "Seuclidean", "Sokalmichener", "Sokalsneath", "Sqeuclidean", "Yule"], selected="Euclidean"),
 
 			# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.imshow.html
-			ui.input_select(id="Interpolation", label="Interpolation", choices=[
-				"None", "Antialiased", "Nearest", "Bilinear", "Bicubic", "Spline16", "Spline36", "Hanning", "Hamming", "Hermite", "Kaiser", "Quadric", "Catrom", "Gaussian", "Bessel", "Mitchell", "Sinc", "Lanczos", "Blackman"], selected="Nearest"),
+			ui.input_select(id="Interpolation", label="Interpolation", choices=["None", "Antialiased", "Nearest", "Bilinear", "Bicubic", "Spline16", "Spline36", "Hanning", "Hamming", "Hermite", "Kaiser", "Quadric", "Catrom", "Gaussian", "Bessel", "Mitchell", "Sinc", "Lanczos", "Blackman"], selected="Nearest"),
 
 			# Set the ColorMap used.
 			ui.input_select(id="ColorMap", label="Color Map", choices=["Viridis", "Plasma", "Inferno", "Magma", "Cividis"], selected="Viridis"),
