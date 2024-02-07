@@ -169,7 +169,7 @@ app_ui = ui.page_fluid(
 			ui.HTML("<a href=https://kkernick.github.io/about/site/index.html>Data Format</a>"),
 
 			# Specify whether to use example files, or upload one.
-			ui.input_radio_buttons(id="SourceFile", label="Specify a Source File", choices=["Example", "Upload"], selected="Example"),
+			ui.input_radio_buttons(id="SourceFile", label="Specify a Source File", choices=["Example", "Upload"], selected="Example", inline=True),
 
 			# Only display an input dialog if the user is one Upload
 			ui.panel_conditional(

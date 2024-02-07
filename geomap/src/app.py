@@ -66,16 +66,30 @@ def server(input: Inputs, output: Outputs, session: Session):
 			case _: return read_table(f)
 
 
+	def LoadJSON():
+		"""
+		@brief Returns the GeoJSON depending on whether the user wants to use a provided one, or their own.
+		@returns Either the path to the uploaded file, or the URL to the one provided by us (Folium supports both)
+		"""
+
+		if input.JSONFile() == "Upload":
+			file: list[FileInfo] | None = input.JSONUpload()
+			if file is None: return None
+			return file[0]["datapath"]
+		else:
+			return "https://raw.githubusercontent.com/kkernick/kkernick.github.io/main/geomap/data/" + input.JSONSelection()
+
+
 	async def LoadMap():
 		"""
 		@brief Generates a map with the provided information
 		@returns the Folium.Map
 		"""
+
 		df = await LoadData()
 
 		# Give a placeholder map if nothing is selected, which should never really be the case.
-		if df.empty:
-			return FoliumMap((53.5213, -113.5213), tiles=input.MapType(), zoom_start=15)
+		if df.empty: return FoliumMap((53.5213, -113.5213), tiles=input.MapType(), zoom_start=15)
 
 		# Create map
 		map = FoliumMap(tiles=input.MapType())
@@ -85,7 +99,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 		# Add the heatmap and return.
 		Choropleth(
-				geo_data="https://raw.githubusercontent.com/kkernick/kkernick.github.io/main/geomap/data/" + input.JSON(),
+				geo_data=LoadJSON(),
 				name='choropleth',
 				data=df,
 				columns=[key, value],
@@ -157,7 +171,7 @@ app_ui = ui.page_fluid(
 			ui.HTML("<a href=https://kkernick.github.io/about/site/index.html>Data Format</a>"),
 
 			# Specify whether to use example files, or upload one.
-			ui.input_radio_buttons(id="SourceFile", label="Specify a Source File", choices=["Example", "Upload"], selected="Example"),
+			ui.input_radio_buttons(id="SourceFile", label="Specify a Source File", choices=["Example", "Upload"], selected="Example", inline=True),
 
 			# Only display an input dialog if the user is one Upload
 			ui.panel_conditional(
@@ -183,7 +197,18 @@ app_ui = ui.page_fluid(
 				)
 			),
 
-			ui.input_select(id="JSON", label=None, choices=json_mappings, multiple=False),
+			ui.input_radio_buttons(id="JSONFile", label="Specify a GeoJSON File", choices=["Provided", "Upload"], selected="Provided", inline=True),
+
+			ui.panel_conditional(
+				"input.JSONFile === 'Upload'",
+				ui.input_file("JSONUpload", "Choose a File", accept=[".geojson"], multiple=False),
+			),
+
+			ui.panel_conditional(
+				"input.JSONFile === 'Provided'",
+				ui.input_select(id="JSONSelection", label=None, choices=json_mappings, multiple=False),
+			),
+
 
 			ui.input_select(id="KeyColumn", label="Key", choices=[], multiple=False),
 			ui.input_select(id="ValueColumn", label="Value", choices=[], multiple=False),
