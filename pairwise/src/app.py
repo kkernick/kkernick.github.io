@@ -249,7 +249,7 @@ app_ui = ui.page_fluid(
 
 		# Add the main interface tabs.
 		ui.navset_tab(
-				ui.nav_panel("Interactive", ui.output_plot("Heatmap", height="90vh")),
+				ui.nav_panel("Interactive", ui.output_plot("Heatmap")),
 				ui.nav_panel("Table", ui.output_table("LoadedTable"),),
 		),
 	)
