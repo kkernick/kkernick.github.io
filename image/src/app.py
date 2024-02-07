@@ -111,7 +111,8 @@ def server(input: Inputs, output: Outputs, session: Session):
 		if img is not None: ax.imshow(img, extent=[0, 1, 0, 1], aspect='auto',zorder=0)
 
 		im = ax.imshow(df, cmap=input.ColorMap().lower(), interpolation=input.Interpolation().lower(), aspect='auto', extent=[0, 1, 0, 1], zorder=1, alpha=input.Opacity())
-		cbar = plt.colorbar(im, ax=ax, label='Value')
+		plt.colorbar(im, ax=ax, label='Value')
+
 		plt.tick_params(axis='both', which='both', bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
 
 		return ax
@@ -210,7 +211,7 @@ app_ui = ui.page_fluid(
 
 		# Add the main interface tabs.
 		ui.navset_tab(
-				ui.nav_panel("Interactive", ui.output_plot("Heatmap")),
+				ui.nav_panel("Interactive", ui.output_plot("Heatmap", height="90vh")),
 				ui.nav_panel("Table", ui.output_table("LoadedTable"),),
 		),
 	)
