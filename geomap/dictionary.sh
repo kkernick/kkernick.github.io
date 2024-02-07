@@ -9,7 +9,7 @@ titleize() {
 python_dict="{"
 
 # Iterate over all files in the current directory
-for file in *; do
+for file in data/*; do
     # Check if the file is a regular file
     if [ -f "$file" ]; then
         # Extract filename without extension
