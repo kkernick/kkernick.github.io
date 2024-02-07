@@ -262,7 +262,7 @@ app_ui = ui.page_fluid(
 			}, selected="Viridis"),
 
 			ui.input_slider(id="Opacity", label="Heatmap Opacity", value=0.5, min=0.0, max=1.0, step=0.1),
-			ui.input_slider(id="Bins", label="Number of Colors", value=8, min=3, max=12, step=1),
+			ui.input_slider(id="Bins", label="Number of Colors", value=8, min=3, max=8, step=1),
 
 			# Add the download buttons.
 			ui.layout_columns(
