@@ -41,6 +41,11 @@ Mappings = { "africa.geojson": "Africa", "akron.geojson": "Akron", "alameda.geoj
 def server(input: Inputs, output: Outputs, session: Session):
 
 	Cache = {}
+	Info = {
+		"example1.txt": "This example file is from the Open Data Portal. The data is from a carbon monoxide emissions study conducted by Environment Canada. The three columns represent results from 1990, 2000, and 2013.",
+		"example2.txt": "This example file is from Statistics Canada. The data is adapted from New cases and age-standardized rate for primary cancer (based on the February 2014 CCR tabulation file), by cancer type and sex, Canada, provinces and territories. The columns represent new cancer cases (age-standardized rate per 100,000 population) from 2006 to 2010.",
+		"example3.txt": "This example file is from the U.S. Centers for Disease Control and Prevention. The data is from Diagnosed Diabetes, Age Adjusted Rate (per 100), Adults - Total, 2013."
+	}
 
 	async def LoadData():
 		"""
@@ -106,7 +111,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 				data=df,
 				columns=[key, value],
 				key_on='feature.properties.name',
-				fill_color='YlGn',
+				fill_color=input.ColorMap(),
 				fill_opacity=input.Opacity(),
 				line_opacity=input.Opacity(),
 				legend_name='Legend',
@@ -191,8 +196,7 @@ app_ui = ui.page_fluid(
 					ui.input_select(id="Example", label=None, choices={
 						"example1.txt": "Example 1",
 						"example2.txt": "Example 2",
-						"example3.txt": "Example 3",
-						"example5.txt": "Example 5"},
+						"example3.txt": "Example 3"},
 						multiple=False),
 					ui.popover(ui.input_action_link(id="ExampleInfoButton", label="Info"), ui.output_text("ExampleInfo")),
 					col_widths=[10,2],
@@ -211,16 +215,49 @@ app_ui = ui.page_fluid(
 				ui.input_select(id="JSONSelection", label=None, choices=Mappings, multiple=False, selected="canada.geojson"),
 			),
 
+			"Table Customization",
 
 			ui.input_select(id="KeyColumn", label="Key", choices=[], multiple=False),
 			ui.input_select(id="ValueColumn", label="Value", choices=[], multiple=False),
 
 
 			# All the features related to map customization are here.
-			ui.HTML("Map Customization"),
+			"Map Customization",
 
 			# Only OpenStreatMap and CartoDB Positron seem to work.
 			ui.input_radio_buttons(id="MapType", label="Map Type", choices=["OpenStreetMap", "CartoDB Positron"], selected="CartoDB Positron"),
+
+			ui.input_select(id="ColorMap", label="Color Map", choices={
+				"BuGn": "Blue-Green",
+				"BuPu": "Blue-Purple",
+				"GnBu": "Green-Blue",
+				"OrRd": "Orange-Red",
+				"PuBu": "Purple-Blue",
+				"PuBuGn": "Purple-Blue-Green",
+				"PuRd": "Purple-Red",
+				"RdPu": "Red-Purple",
+				"YlGn": "Yellow-Green",
+				"YlGnBu": "Yellow-Green-Blue",
+				"YlOrBr": "Yellow-Orange-Brown",
+				"YlOrRd": "Yellow-Orange-Red",
+				"BrBG": "Brown-Blue-Green",
+				"PRGn": "Purple-Red-Green",
+				"PiYG": "Pink-Yellow-Green",
+				"PuOr": "Purple-Orange",
+				"RdBu": "Red-Blue",
+				"RdGy": "Red-Grey",
+				"RdYlBu": "Red-Yellow-Blue",
+				"RdYlGn": "Red-Yellow-Green",
+				"Spectral": "Spectral",
+				"Accent": "Accent",
+				"Dark2": "Dark",
+				"Paired": "Paired",
+				"Pastel1": "Pastel 1",
+				"Pastel2": "Pastel 2",
+				"Set1": "Set 1",
+				"Set2": "Set 2",
+				"Set3": "Set 3"
+			}, selected="Viridis"),
 
 			ui.input_slider(id="Opacity", label="Heatmap Opacity", value=0.5, min=0.0, max=1.0, step=0.1),
 			ui.input_slider(id="Bins", label="Number of Colors", value=8, min=3, max=12, step=1),
