@@ -1,128 +1,155 @@
+#
+# Heatmapper
+# Geomap
+#
+# This file contains the ShinyLive application for Geomap Heatmapper.
+# It can be run with the following command within this directory:
+#		shinylive export . [site]
+# Where [site] is the destination of the site folder.
+#
+# If you would rather deploy the application as a PyShiny application,
+# run the following command within this directory:
+#		shiny run
+#
+# Last Modified: 2024/02/06
+#
+
 from shiny import App, Inputs, Outputs, Session, reactive, render, ui
 from shiny.types import FileInfo
-
-# We need to import here so ShinyLive doesn't get upset.
-import certifi, branca, xyzservices
-import folium
+from folium import Map as FoliumMap, Choropleth
 from folium.plugins import HeatMap
-
-import pandas as pd
-
+from pandas import DataFrame, read_csv, read_excel, read_table
 from pathlib import Path
-from io import StringIO
+from io import BytesIO
+from sys import modules
 
 
-from examples import examples
+# Interoperability between ShinyLive and PyShiny
+if "pyodide" in modules:
+	from pyodide.http import pyfetch
+	Source = "https://raw.githubusercontent.com/kkernick/kkernick.github.io/main/geomap/example_input/"
+	async def download(url): r = await pyfetch(url); return await r.bytes() if r.ok else None
+else:
+	from os.path import exists
+	Source = "../example_input/"
+	async def download(url): return open(url, "rb").read() if exists(url) else None
+
+
+# Generated from dictionary.sh
+json_mappings = { "africa.geojson": "Africa", "akron.geojson": "Akron", "alameda.geojson": "Alameda", "albany.geojson": "Albany", "albuquerque.geojson": "Albuquerque", "amsterdam.geojson": "Amsterdam", "amusement-parks.geojson": "Amusement Parks", "anchorage.geojson": "Anchorage", "angers.geojson": "Angers", "angers-loire-metropole.geojson": "Angers Loire Metropole", "antwerp.geojson": "Antwerp", "apulia.geojson": "Apulia", "arlingtonva.geojson": "Arlingtonva", "asia.geojson": "Asia", "athens.geojson": "Athens", "atlanta.geojson": "Atlanta", "augsburg.geojson": "Augsburg", "austin.geojson": "Austin", "australia.geojson": "Australia", "austria-oberoesterreich.geojson": "Austria Oberoesterreich", "austria-states.geojson": "Austria States", "austria-steiermark.geojson": "Austria Steiermark", "bad-belzig.geojson": "Bad Belzig", "badenwuerttemberg-kreise.geojson": "Badenwuerttemberg Kreise", "baltimore.geojson": "Baltimore", "bari.geojson": "Bari", "basel.geojson": "Basel", "bayern.geojson": "Bayern", "belgium-arrondissements.geojson": "Belgium Arrondissements", "berlin.geojson": "Berlin", "bern-districts.geojson": "Bern Districts", "bern-quarters.geojson": "Bern Quarters", "birmingham.geojson": "Birmingham", "blacksburg.geojson": "Blacksburg", "blumenau.geojson": "Blumenau", "bogota.geojson": "Bogota", "boston.geojson": "Boston", "brandenburg.geojson": "Brandenburg", "brandenburg-municipalities.geojson": "Brandenburg Municipalities", "braunschweig.geojson": "Braunschweig", "brazil-states.geojson": "Brazil States", "bremen.geojson": "Bremen", "bronx.geojson": "Bronx", "brooklyn.geojson": "Brooklyn", "buenos-aires.geojson": "Buenos Aires", "calgary.geojson": "Calgary", "california-counties.geojson": "California Counties", "california-vista-points.geojson": "California Vista Points", "caltrain-stations.geojson": "Caltrain Stations", "canada.geojson": "Canada", "canberra.geojson": "Canberra", "caribbean-islands.geojson": "Caribbean Islands", "chapel-hill.geojson": "Chapel Hill", "charlotte.geojson": "Charlotte", "charlottesville.geojson": "Charlottesville", "chemnitz.geojson": "Chemnitz", "chesapeake.geojson": "Chesapeake", "chicago.geojson": "Chicago", "china.geojson": "China", "cincinnati.geojson": "Cincinnati", "cleveland.geojson": "Cleveland", "cologne.geojson": "Cologne", "colorado-counties.geojson": "Colorado Counties", "columbus.geojson": "Columbus", "copenhagen.geojson": "Copenhagen", "cuba.geojson": "Cuba", "dallas.geojson": "Dallas", "dane-county-municipalities.geojson": "Dane County Municipalities", "denmark-municipalities.geojson": "Denmark Municipalities", "denver.geojson": "Denver", "des-moines.geojson": "Des Moines", "detroit.geojson": "Detroit", "dictionary.sh": "Dictionary", "dresden.geojson": "Dresden", "dublin.geojson": "Dublin", "duesseldorf.geojson": "Duesseldorf", "durham.geojson": "Durham", "edmonton.geojson": "Edmonton", "eindhoven.geojson": "Eindhoven", "enschede.geojson": "Enschede", "esztergom.geojson": "Esztergom", "europe-1914.geojson": "Europe 1914", "europe-1938.geojson": "Europe 1938", "europe-capitals.geojson": "Europe Capitals", "europe.geojson": "Europe", "fairbanks.geojson": "Fairbanks", "fargo.geojson": "Fargo", "fort-lauderdale.geojson": "Fort Lauderdale", "france-departments.geojson": "France Departments", "france-regions.geojson": "France Regions", "frankfurt-main.geojson": "Frankfurt Main", "freiburg.geojson": "Freiburg", "geneva.geojson": "Geneva", "germany-capitals.geojson": "Germany Capitals", "germany.geojson": "Germany", "ghent.geojson": "Ghent", "gisborne.geojson": "Gisborne", "grand-rapids.geojson": "Grand Rapids", "greece-prefectures.geojson": "Greece Prefectures", "greece-regions.geojson": "Greece Regions", "hamburg.geojson": "Hamburg", "hampton.geojson": "Hampton", "hartford.geojson": "Hartford", "henderson.geojson": "Henderson", "honolulu.geojson": "Honolulu", "houston.geojson": "Houston", "hungary.geojson": "Hungary", "illinois-counties.geojson": "Illinois Counties", "india.geojson": "India", "indianapolis.geojson": "Indianapolis", "iran-provinces.geojson": "Iran Provinces", "ireland-counties.geojson": "Ireland Counties", "isle-of-man.geojson": "Isle Of Man", "italy-provinces.geojson": "Italy Provinces", "italy-regions.geojson": "Italy Regions", "james-city-county.geojson": "James City County", "japan.geojson": "Japan", "kaiserslautern.geojson": "Kaiserslautern", "kansas-city.geojson": "Kansas City", "korea.geojson": "Korea", "las-vegas.geojson": "Las Vegas", "leipzig.geojson": "Leipzig", "le-mans-cantons.geojson": "Le Mans Cantons", "lexington.geojson": "Lexington", "liberia-central.geojson": "Liberia Central", "liberia-east.geojson": "Liberia East", "liberia.geojson": "Liberia", "liberia-west.geojson": "Liberia West", "lombardy.geojson": "Lombardy", "london.geojson": "London", "london-underground.geojson": "London Underground", "long-beach.geojson": "Long Beach", "los-angeles-county.geojson": "Los Angeles County", "los-angeles.geojson": "Los Angeles", "louisville.geojson": "Louisville", "luxembourg-cantons.geojson": "Luxembourg Cantons", "luxembourg-communes.geojson": "Luxembourg Communes", "luzern.geojson": "Luzern", "macon.geojson": "Macon", "madrid-districts.geojson": "Madrid Districts", "madrid.geojson": "Madrid", "malaysia.geojson": "Malaysia", "manhattan-bridges.geojson": "Manhattan Bridges", "manhattan.geojson": "Manhattan", "melbourne.geojson": "Melbourne", "mexico.geojson": "Mexico", "miami.geojson": "Miami", "middle_east_countries.geojson": "Middle_east_countries", "milan.geojson": "Milan", "milwaukee.geojson": "Milwaukee", "minneapolis-cities.geojson": "Minneapolis Cities", "minneapolis.geojson": "Minneapolis", "mississauga.geojson": "Mississauga", "montreal.geojson": "Montreal", "moscow.geojson": "Moscow", "muenster.geojson": "Muenster", "new-haven.geojson": "New Haven", "new-orleans.geojson": "New Orleans", "new-york-areas-of-interest.geojson": "New York Areas Of Interest", "new-york-city-boroughs.geojson": "New York City Boroughs", "new-york-counties.geojson": "New York Counties", "nordrhein-westfalen.geojson": "Nordrhein Westfalen", "norfolk.geojson": "Norfolk", "north-america.geojson": "North America", "north-carolina-cities.geojson": "North Carolina Cities", "oakland.geojson": "Oakland", "oceania.geojson": "Oceania", "oklahoma-cities.geojson": "Oklahoma Cities", "oklahoma-counties.geojson": "Oklahoma Counties", "olympia.geojson": "Olympia", "oman.geojson": "Oman", "oman-provinces.geojson": "Oman Provinces", "orlando.geojson": "Orlando", "pakistan.geojson": "Pakistan", "paris.geojson": "Paris", "peaks.geojson": "Peaks", "philadelphia.geojson": "Philadelphia", "phoenix.geojson": "Phoenix", "pittsburgh.geojson": "Pittsburgh", "poland.geojson": "Poland", "poland-parks.geojson": "Poland Parks", "porirua.geojson": "Porirua", "portland.geojson": "Portland", "portugal.geojson": "Portugal", "potsdam.geojson": "Potsdam", "prague.geojson": "Prague", "providence.geojson": "Providence", "quebec.geojson": "Quebec", "queens.geojson": "Queens", "raleigh.geojson": "Raleigh", "red-deer.geojson": "Red Deer", "richmond.geojson": "Richmond", "riga.geojson": "Riga", "rio-de-janeiro.geojson": "Rio De Janeiro", "rochester.geojson": "Rochester", "rockville.geojson": "Rockville", "roller-coasters-fastest-steel.geojson": "Roller Coasters Fastest Steel", "romania.geojson": "Romania", "rome-rioni.geojson": "Rome Rioni", "rotterdam.geojson": "Rotterdam", "russia.geojson": "Russia", "sacramento.geojson": "Sacramento", "salt-lake-city.geojson": "Salt Lake City", "san-antonio.geojson": "San Antonio", "san-diego.geojson": "San Diego", "san-francisco.geojson": "San Francisco", "san-jose.geojson": "San Jose", "saskatoon.geojson": "Saskatoon", "savannah.geojson": "Savannah", "seattle.geojson": "Seattle", "seoul.geojson": "Seoul", "serbia.geojson": "Serbia", "silicon-valley.geojson": "Silicon Valley", "south-africa.geojson": "South Africa", "south-america.geojson": "South America", "southeast-asia.geojson": "Southeast Asia", "spain-communities.geojson": "Spain Communities", "spain-provinces.geojson": "Spain Provinces", "springfield.geojson": "Springfield", "stamford.geojson": "Stamford", "staten-island.geojson": "Staten Island", "st-louis.geojson": "St Louis", "st-petersburg.geojson": "St Petersburg", "surrey.geojson": "Surrey", "sweden-counties.geojson": "Sweden Counties", "switzerland.geojson": "Switzerland", "sydney.geojson": "Sydney", "szczecin.geojson": "Szczecin", "taiwan.geojson": "Taiwan", "tampa.geojson": "Tampa", "the-hague.geojson": "The Hague", "the-netherlands.geojson": "The Netherlands", "thessaloniki.geojson": "Thessaloniki", "toronto.geojson": "Toronto", "tucson.geojson": "Tucson", "turkey.geojson": "Turkey", "turku.geojson": "Turku", "ulm.geojson": "Ulm", "united-kingdom.geojson": "United Kingdom", "united-kingdom-regions.geojson": "United Kingdom Regions", "united-states-1810.geojson": "United States 1810", "united-states-big-cities.geojson": "United States Big Cities", "united-states.geojson": "United States", "united-states-international-airports.geojson": "United States International Airports", "united-states-mlb-stadiums.geojson": "United States Mlb Stadiums", "unna.geojson": "Unna", "utrecht.geojson": "Utrecht", "vancouver.geojson": "Vancouver", "venice.geojson": "Venice", "venlo.geojson": "Venlo", "vermont-counties.geojson": "Vermont Counties", "vienna.geojson": "Vienna", "villetta.geojson": "Villetta", "washington.geojson": "Washington", "wellington.geojson": "Wellington", "west-linn.geojson": "West Linn", "west-palm-beach.geojson": "West Palm Beach", "wiesenburg.geojson": "Wiesenburg", "williamsburg.geojson": "Williamsburg", "windsor.geojson": "Windsor", "winterthur.geojson": "Winterthur", "zurich-city.geojson": "Zurich City", "zurich.geojson": "Zurich" }
 
 
 def server(input: Inputs, output: Outputs, session: Session):
 
-	# Returns the data of whatever we should generate our map off of.
-	def LoadData():
+	Cache = {}
 
-		# To work well with StringIO
-		ext = ""
+	async def LoadData():
+		"""
+		@brief Returns the DataFrame representation of the data to place on the map
+		@returns The DataFrame
+		"""
 
-		# If we have an upload file, try and open it.
+		# Grab an uploaded file, if its done, or grab an example (Using a cache to prevent redownload)
 		if input.SourceFile() == "Upload":
 			file: list[FileInfo] | None = input.File()
 			if file is None:
-					return pd.DataFrame()
+					return DataFrame()
+			n = file[0]["name"]
 			f = file[0]["datapath"]
-			ext = f
-
-		# Otherwise, fetch the example file selected.
 		else:
-			f = StringIO(examples[input.ExampleFile()]["data"])
+			n = input.Example()
+			f = Cache[n] if n in Cache else BytesIO(await download(Source + input.Example()))
 
-		# Handle extensions.
-		if ext.endswith(".csv"):
-			return pd.read_csv(f)
-		elif ext.endswith(".xlsx"):
-			return pd.read_xlsx(f)
-		else:
-			return pd.read_table(f)
+		match Path(n).suffix:
+			case ".csv": return read_csv(f)
+			case ".xlsx": return read_excel(f)
+			case _: return read_table(f)
 
 
-	def LoadJSON():
-		file: list[FileInfo] | None = input.JSON()
-		if file is None:
-				return None
-		return file[0]["datapath"]
-
-
-	# Generates the Map given the current options selected by the user.
-	def LoadMap():
-		df = LoadData()
+	async def LoadMap():
+		"""
+		@brief Generates a map with the provided information
+		@returns the Folium.Map
+		"""
+		df = await LoadData()
 
 		# Give a placeholder map if nothing is selected, which should never really be the case.
 		if df.empty:
-			return folium.Map((53.5213, -113.5213), tiles=input.MapType(), zoom_start=15)
+			return FoliumMap((53.5213, -113.5213), tiles=input.MapType(), zoom_start=15)
 
-		# Create map		
-		map = folium.Map(tiles=input.MapType())
+		# Create map
+		map = FoliumMap(tiles=input.MapType())
 
-		json = LoadJSON()
-		if json is not None:
-			key = df.columns[0] if input.KeyColumn() is None else input.KeyColumn()
-			value = df.columns[1] if input.ValueColumn() is None else input.ValueColumn()
+		key = df.columns[0] if input.KeyColumn() is None else input.KeyColumn()
+		value = df.columns[1] if input.ValueColumn() is None else input.ValueColumn()
 
-			# Add the heatmap and return.
-			folium.Choropleth(
-					geo_data=json,
-					name='choropleth',
-					data=df,
-					columns=[key, value],
-					key_on='feature.properties.name',
-					fill_color='YlGn',
-					fill_opacity=input.Opacity(),
-					line_opacity=input.Opacity(),
-					legend_name='Legend',
-					bins=input.Bins()
-			).add_to(map)
+		# Add the heatmap and return.
+		Choropleth(
+				geo_data="https://raw.githubusercontent.com/kkernick/kkernick.github.io/main/geomap/data/" + input.JSON(),
+				name='choropleth',
+				data=df,
+				columns=[key, value],
+				key_on='feature.properties.name',
+				fill_color='YlGn',
+				fill_opacity=input.Opacity(),
+				line_opacity=input.Opacity(),
+				legend_name='Legend',
+				bins=input.Bins()
+		).add_to(map)
 		return map
 
 
 	@output
 	@render.table
-	def LoadedTable():
-		return LoadData()
+	async def LoadedTable(): return await LoadData()
+
 
 	@output
 	@render.ui
-	def Map():
-		return LoadMap()
-		
+	async def Map(): return await LoadMap()
 
-	# Update the Popup depending on what example the user has selected.
+
+	@output
+	@render.text
+	def ExampleInfo(): return Info[input.Example()]
+
+
+	@session.download(filename="table.csv")
+	async def DownloadTable(): yield await LoadData().to_string()
+
+
+	@session.download(filename="heatmap.html")
+	async def DownloadHeatmap(): yield await LoadMap().get_root().render()
+
+
 	@reactive.Effect
-	def _():
-		ui.update_popover("InfoPopup", ui.HTML(examples[input.ExampleFile()]["info"]))
+	async def _():
 
-		df = LoadData()
+		# Give options for the key and value columns
+		df = await LoadData()
 		choices = df.columns.tolist()
 		if choices:
-			default_key = input.KeyColumn() if input.KeyColumn() is not None else df.columns[0] 
-			default_value = input.ValueColumn() if input.ValueColumn() is not None else df.columns[1] 
+			default_key = input.KeyColumn() if input.KeyColumn() is not None else df.columns[0]
+			default_value = input.ValueColumn() if input.ValueColumn() is not None else df.columns[1]
 
 			ui.update_select(id="KeyColumn", choices=choices, selected=default_key)
 			ui.update_select(id="ValueColumn", choices=choices, selected=default_value)
 
 
-	@session.download(filename="table.csv")
-	def DownloadTable():
-		yield LoadData().to_string()
-
-
-	@session.download(filename="heatmap.html")
-	def DownloadHeatmap():
-		yield LoadMap().get_root().render()
-
-
-
 app_ui = ui.page_fluid(
-	# Place the Heatmapper Home on the top.
-	ui.panel_title(ui.HTML('<a href="https://kkernick.github.io">Heatmapper</a>')),
+
+	ui.panel_title(title=None, window_title="Heatmapper"),
+		ui.navset_bar(
+			ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/expression/site/index.html>Expression</a>"), value="Expression"),
+			ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/pairwise/site/index.html>Pairwise</a>"), value="Pairwise"),
+			ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/image/site/index.html>Image</a>"), value="Image"),
+			ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/geomap/site/index.html>Geomap</a>"), value="Geomap"),
+			ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/geocoordinate/site/index.html>Geocoordinate</a>"), value="Geocoordinate"),
+			ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/about/site/index.html>About</a>"), value="About"),
+			title="Heatmapper",
+			selected="Geomap",
+	),
+
 	ui.layout_sidebar(
 		ui.sidebar(
 
@@ -145,37 +172,22 @@ app_ui = ui.page_fluid(
 				# Put them side-by-side.
 				ui.layout_columns(
 
-					ui.input_select(id="ExampleFile", label=None, choices=["Example 1", "Example 2", "Example 3"], multiple=False),
-
-					# This message never appears, the server updates it depending
-					# on the selection from the above input selection.					
-					ui.popover(
-						ui.input_action_button(id="InfoButton", label="Info"),
-						"Please choose an example!",
-						id="InfoPopup"
-					),
-					col_widths=[8,4]
+					ui.input_select(id="Example", label=None, choices={
+						"example1.txt": "Example 1",
+						"example2.txt": "Example 2",
+						"example3.txt": "Example 3",
+						"example5.txt": "Example 5"},
+						multiple=False),
+					ui.popover(ui.input_action_link(id="ExampleInfoButton", label="Info"), ui.output_text("ExampleInfo")),
+					col_widths=[10,2],
 				)
 			),
 
-			ui.layout_columns(
-				ui.HTML("Choose a GeoJSON file"),
-				ui.popover(
-					ui.input_action_button(id="GeoButton", label="Info"),
-					ui.HTML("Heatmapper uses GeoJSON files to create country/territory boundaries. A good source is from <a href=https://github.com/codeforgermany/click_that_hood/tree/main/public/data>here</a>."),
-					id="JSONPopup"
-				),
-				col_widths=[8,4]
-			),
-
-			ui.input_file(id="JSON", label=None, accept=[".geojson"], multiple=False),
-
+			ui.input_select(id="JSON", label=None, choices=json_mappings, multiple=False),
 
 			ui.input_select(id="KeyColumn", label="Key", choices=[], multiple=False),
 			ui.input_select(id="ValueColumn", label="Value", choices=[], multiple=False),
 
-
-			ui.br(),
 
 			# All the features related to map customization are here.
 			ui.HTML("Map Customization"),
@@ -185,9 +197,6 @@ app_ui = ui.page_fluid(
 
 			ui.input_slider(id="Opacity", label="Heatmap Opacity", value=0.5, min=0.0, max=1.0, step=0.1),
 			ui.input_slider(id="Bins", label="Number of Colors", value=8, min=3, max=12, step=1),
-
-
-			ui.br(),
 
 			# Add the download buttons.
 			ui.layout_columns(
@@ -201,14 +210,10 @@ app_ui = ui.page_fluid(
 
 		# Add the main interface tabs.
 		ui.navset_tab(
-
-				# The map
 				ui.nav_panel("Interactive", ui.output_ui("Map")),
-
-				# The table
 				ui.nav_panel("Table", ui.output_table("LoadedTable"),),
 		),
 	)
-)	
+)
 
 app = App(app_ui, server)
