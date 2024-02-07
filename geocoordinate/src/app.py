@@ -1,56 +1,84 @@
+#
+# Heatmapper
+# Geocoordinate
+#
+# This file contains the ShinyLive application for Geocoordinate Heatmapper.
+# It can be run with the following command within this directory:
+#		shinylive export . [site]
+# Where [site] is the destination of the site folder.
+#
+# If you would rather deploy the application as a PyShiny application,
+# run the following command within this directory:
+#		shiny run
+#
+# Last Modified: 2024/02/07
+#
+
+
 from shiny import App, Inputs, Outputs, Session, reactive, render, ui
 from shiny.types import FileInfo
-
-# We need to import here so ShinyLive doesn't get upset.
-import certifi, branca, xyzservices
-import folium
+from folium import Map as FoliumMap
 from folium.plugins import HeatMap
-
-import pandas as pd
-
+from pandas import DataFrame, read_csv, read_excel, read_table
 from pathlib import Path
-from io import StringIO
+from io import BytesIO
+from sys import modules
 
 
-from examples import examples
+# Interoperability between ShinyLive and PyShiny
+if "pyodide" in modules:
+	from pyodide.http import pyfetch
+	Source = "https://raw.githubusercontent.com/kkernick/kkernick.github.io/main/geocoordinate/example_input/"
+	async def download(url): r = await pyfetch(url); return await r.bytes() if r.ok else None
+else:
+	from os.path import exists
+	Source = "../example_input/"
+	async def download(url): return open(url, "rb").read() if exists(url) else None
 
 
 def server(input: Inputs, output: Outputs, session: Session):
 
-	# Returns the data of whatever we should generate our map off of.
-	def LoadData():
+	Cache = {}
+	Info = {
+		"example1.txt": "This example dataset shows deaths from a cholera outbreak in 1854. John Snow used this data in conjunction with local pump locations as evidence that cholera is spread by contaminated water. A digitised version of the data is available online, courtesy of Robin Wilson (robin@rtwilson.com).",
+		"example2.txt": "This example data set shows bike thefts in Vancouver in 2011. The data was obtained from a 2013 Vancouver Sun blog post by Chad Skelton.",
+		"example3.txt": "This example data set shows the location of traffic signals in Toronto. The data was obtained from Toronto Open Data. The idea to use this data set comes from this R-bloggers post by Myles Harrison."
+	}
 
-		# To work well with StringIO
-		ext = ""
 
-		# If we have an upload file, try and open it.
+	async def LoadData():
+		"""
+		@brief Returns the DataFrame representation of the data to place on the map
+		@returns The DataFrame
+		"""
+
+		# Grab an uploaded file, if its done, or grab an example (Using a cache to prevent redownload)
 		if input.SourceFile() == "Upload":
 			file: list[FileInfo] | None = input.File()
 			if file is None:
-					return pd.DataFrame()
+					return DataFrame()
+			n = file[0]["name"]
 			f = file[0]["datapath"]
-			ext = f
-
-		# Otherwise, fetch the example file selected.
 		else:
-			f = StringIO(examples[input.ExampleFile()]["data"])
+			n = input.Example()
+			f = Cache[n] if n in Cache else BytesIO(await download(Source + input.Example()))
 
-		# Handle extensions.
-		if ext.endswith(".csv"):
-			return pd.read_csv(f)
-		elif ext.endswith(".xlsx"):
-			return pd.read_xlsx(f)
-		else:
-			return pd.read_table(f)
+		match Path(n).suffix:
+			case ".csv": return read_csv(f)
+			case ".xlsx": return read_excel(f)
+			case _: return read_table(f)
 
 
-	# Generates the Map given the current options selected by the user.
-	def LoadMap():
-		df = LoadData()
+	async def LoadMap():
+		"""
+		@brief Generates a map with the provided information
+		@returns the Folium.Map
+		"""
+
+		df = await LoadData()
 
 		# Give a placeholder map if nothing is selected, which should never really be the case.
-		if df.empty:
-			return folium.Map((53.5213, -113.5213), tiles=input.MapType(), zoom_start=15)
+		if df.empty: return FoliumMap((53.5213, -113.5213), tiles=input.MapType(), zoom_start=15)
 
 		# Get the long and lat.
 		longitudes = df["Longitude"].tolist()
@@ -62,56 +90,58 @@ def server(input: Inputs, output: Outputs, session: Session):
 			if option in df:
 				values = df[option].tolist()
 				break
-		if not values:
-			values = [1] * len(longitudes)
-		
+		if not values: values = [1] * len(longitudes)
+
 
 		#  Get the data ready.
 		data = list(zip(latitudes, longitudes, values))
 
 		# Find a decent initial zoom.
-		sw = [min(latitudes), min(longitudes)]
-		ne = [max(latitudes), max(longitudes)]
-		map = folium.Map((latitudes[0], longitudes[0]), tiles=input.MapType())
-		map.fit_bounds([sw, ne])
-
-		# Add the heatmap and return.
+		map = FoliumMap((latitudes[0], longitudes[0]), tiles=input.MapType())
 		HeatMap(data, min_opacity=input.Opacity(), radius=input.Radius(), blur=input.Blur()).add_to(map)
+		map.fit_bounds(map.get_bounds())
+
 		return map
 
 
 	@output
 	@render.table
-	def LoadedTable():
-		return LoadData()
+	async def LoadedTable(): return await LoadData()
 
 
 	@output
 	@render.ui
-	def Map():
-		return LoadMap()
-		
+	async def Map(): return await LoadMap()
 
-	# Update the Popup depending on what example the user has selected.
-	@reactive.Effect
-	def _():
-		ui.update_popover("InfoPopup", ui.HTML(examples[input.ExampleFile()]["info"]))
+
+	@output
+	@render.text
+	def ExampleInfo(): return Info[input.Example()]
 
 
 	@session.download(filename="table.csv")
-	def DownloadTable():
-		yield LoadData().to_string()
+	async def DownloadTable(): yield await LoadData().to_string()
 
 
 	@session.download(filename="heatmap.html")
-	def DownloadHeatmap():
-		yield LoadMap().get_root().render()
+	async def DownloadHeatmap(): yield await LoadMap().get_root().render()
 
 
 
 app_ui = ui.page_fluid(
-	# Place the Heatmapper Home on the top.
-	ui.panel_title(ui.HTML('<a href="https://kkernick.github.io">Heatmapper</a>')),
+
+	ui.panel_title(title=None, window_title="Heatmapper"),
+	ui.navset_bar(
+		ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/expression/site/index.html>Expression</a>"), value="Expression"),
+		ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/pairwise/site/index.html>Pairwise</a>"), value="Pairwise"),
+		ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/image/site/index.html>Image</a>"), value="Image"),
+		ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/geomap/site/index.html>Geomap</a>"), value="Geomap"),
+		ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/geocoordinate/site/index.html>Geocoordinate</a>"), value="Geocoordinate"),
+		ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/about/site/index.html>About</a>"), value="About"),
+		title="Heatmapper",
+		selected="Geocoordinate",
+	),
+
 	ui.layout_sidebar(
 		ui.sidebar(
 
@@ -134,19 +164,15 @@ app_ui = ui.page_fluid(
 				# Put them side-by-side.
 				ui.layout_columns(
 
-					ui.input_select(id="ExampleFile", label=None, choices=["Example 1", "Example 2", "Example 3"], multiple=False),
-
-					# This message never appears, the server updates it depending
-					# on the selection from the above input selection.					
-					ui.popover(
-						ui.input_action_button(id="InfoButton", label="Info"),
-						"Please choose an example!",
-						id="InfoPopup"
-					),
+					ui.input_select(id="Example", label=None, choices={
+						"example1.txt": "Example 1",
+						"example2.txt": "Example 2",
+						"example3.txt": "Example 3"},
+						multiple=False),
+					ui.popover(ui.input_action_link(id="ExampleInfoButton", label="Info"), ui.output_text("ExampleInfo")),
+					col_widths=[10,2],
 				)
 			),
-
-			ui.br(),
 
 			# All the features related to map customization are here.
 			ui.HTML("Map Customization"),
@@ -157,8 +183,6 @@ app_ui = ui.page_fluid(
 			ui.input_slider(id="Opacity", label="Heatmap Opacity", value=0.5, min=0.0, max=1.0, step=0.1),
 			ui.input_slider(id="Radius", label="Size of Points", value=25, min=5, max=50, step=5),
 			ui.input_slider(id="Blur", label="Blurring", value=15, min=1, max=30, step=1),
-
-			ui.br(),
 
 			# Add the download buttons.
 			ui.layout_columns(
@@ -173,14 +197,10 @@ app_ui = ui.page_fluid(
 
 		# Add the main interface tabs.
 		ui.navset_tab(
-
-				# The map
 				ui.nav_panel("Interactive", ui.output_ui("Map")),
-
-				# The table
 				ui.nav_panel("Table", ui.output_table("LoadedTable"),),
 		),
 	)
-)	
+)
 
 app = App(app_ui, server)

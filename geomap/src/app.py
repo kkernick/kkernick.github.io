@@ -17,7 +17,6 @@
 from shiny import App, Inputs, Outputs, Session, reactive, render, ui
 from shiny.types import FileInfo
 from folium import Map as FoliumMap, Choropleth
-from folium.plugins import HeatMap
 from pandas import DataFrame, read_csv, read_excel, read_table
 from pathlib import Path
 from io import BytesIO
@@ -46,6 +45,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 		"example2.txt": "This example file is from Statistics Canada. The data is adapted from New cases and age-standardized rate for primary cancer (based on the February 2014 CCR tabulation file), by cancer type and sex, Canada, provinces and territories. The columns represent new cancer cases (age-standardized rate per 100,000 population) from 2006 to 2010.",
 		"example3.txt": "This example file is from the U.S. Centers for Disease Control and Prevention. The data is from Diagnosed Diabetes, Age Adjusted Rate (per 100), Adults - Total, 2013."
 	}
+
 
 	async def LoadData():
 		"""
