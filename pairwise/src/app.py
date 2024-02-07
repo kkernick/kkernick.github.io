@@ -184,12 +184,12 @@ app_ui = ui.page_fluid(
 	# Welcome back, NavBar :)
 	ui.panel_title(title=None, window_title="Heatmapper"),
 	ui.navset_bar(
-		ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/expression/site/index.html>Expression</a>"), value="Expression"),
-		ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/pairwise/site/index.html>Pairwise</a>"), value="Pairwise"),
-		ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/image/site/index.html>Image</a>"), value="Image"),
-		ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/geomap/site/index.html>Geomap</a>"), value="Geomap"),
-		ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/geocoordinate/site/index.html>Geocoordinate</a>"), value="Geocoordinate"),
-		ui.nav_panel(ui.HTML("<a href=https://kkernick.github.io/about/site/index.html>About</a>"), value="About"),
+		ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io/expression/site/index.html target="_blank" rel="noopener noreferrer">Expression</a>'), value="Expression"),
+		ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io/pairwise/site/index.html target="_blank" rel="noopener noreferrer">Pairwise</a>'), value="Pairwise"),
+		ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io/image/site/index.html target="_blank" rel="noopener noreferrer">Image</a>'), value="Image"),
+		ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io/geomap/site/index.html target="_blank" rel="noopener noreferrer">Geomap</a>'), value="Geomap"),
+		ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io/geocoordinate/site/index.html target="_blank" rel="noopener noreferrer">Geocoordinate</a>'), value="Geocoordinate"),
+		ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io/about/site/index.html target="_blank" rel="noopener noreferrer">About</a>'), value="About"),
 		title="Heatmapper",
 		selected="Pairwise",
 	),
