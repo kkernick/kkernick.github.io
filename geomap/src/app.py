@@ -117,6 +117,9 @@ def server(input: Inputs, output: Outputs, session: Session):
 				legend_name='Legend',
 				bins=input.Bins()
 		).add_to(map)
+
+		map.fit_bounds(map.get_bounds())
+
 		return map
 
 
@@ -192,7 +195,6 @@ app_ui = ui.page_fluid(
 
 				# Put them side-by-side.
 				ui.layout_columns(
-
 					ui.input_select(id="Example", label=None, choices={
 						"example1.txt": "Example 1",
 						"example2.txt": "Example 2",
