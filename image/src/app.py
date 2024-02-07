@@ -87,7 +87,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 			return None if file is None else Image.open(file[0]["datapath"])
 		else:
 			n = input.Example()
-			return Image.open(Cache[n] if n in Cache else BytesIO(await download(Source + Info[input.Example()]["Image"])))
+			return Cache[n] if n in Cache else Image.open(BytesIO(await download(Source + Info[input.Example()]["Image"])))
 
 
 	async def GenerateHeatmap():
