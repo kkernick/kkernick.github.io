@@ -72,12 +72,15 @@ def server(input: Inputs, output: Outputs, session: Session):
 		@returns Either the path to the uploaded file, or the URL to the one provided by us (Folium supports both)
 		"""
 
+		URL = "https://raw.githubusercontent.com/kkernick/kkernick.github.io/main/geomap/data/"
+
 		if input.JSONFile() == "Upload":
 			file: list[FileInfo] | None = input.JSONUpload()
-			if file is None: return None
+			if file is None:
+				return URL + "canada.geojson"
 			return file[0]["datapath"]
 		else:
-			return "https://raw.githubusercontent.com/kkernick/kkernick.github.io/main/geomap/data/" + input.JSONSelection()
+			return URL + input.JSONSelection()
 
 
 	async def LoadMap():
@@ -206,7 +209,7 @@ app_ui = ui.page_fluid(
 
 			ui.panel_conditional(
 				"input.JSONFile === 'Provided'",
-				ui.input_select(id="JSONSelection", label=None, choices=json_mappings, multiple=False),
+				ui.input_select(id="JSONSelection", label=None, choices=json_mappings, multiple=False, selected="canada.geojson"),
 			),
 
 
