@@ -16,7 +16,7 @@
 
 from shiny import App, Inputs, Outputs, Session, reactive, render, ui
 from shiny.types import FileInfo
-import matplotlib.pyplot as plt
+from matplotlib.pyplot import subplots, colorbar
 from pandas import DataFrame, read_csv, read_excel, read_table
 from PIL import Image
 from io import BytesIO
@@ -104,14 +104,14 @@ def server(input: Inputs, output: Outputs, session: Session):
 		if {"x", "y", "value"}.issubset(df.columns):
 			df = df.pivot(index="y", columns="x", values="value")
 
-		fig, ax = plt.subplots()
+		fig, ax = subplots()
 
 		# Add the image as an overlay, if we have one.
 		if img is not None: ax.imshow(img, extent=[0, 1, 0, 1], aspect="auto",zorder=0)
 		im = ax.imshow(df, cmap=input.ColorMap().lower(), interpolation=input.Interpolation().lower(), aspect="auto", extent=[0, 1, 0, 1], zorder=1, alpha=input.Opacity())
 
 		# Visibility of features
-		if "legend" in input.Features(): plt.colorbar(im, ax=ax, label="Value")
+		if "legend" in input.Features(): colorbar(im, ax=ax, label="Value")
 
 		if "y" in input.Features():
 			ax.tick_params(axis="y", labelsize=input.TextSize())

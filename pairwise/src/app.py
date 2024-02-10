@@ -146,7 +146,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 		im = ax.imshow(df, cmap=input.ColorMap().lower(), interpolation=input.Interpolation().lower())
 
 		# Visibility of features
-		if "legend" in input.Features(): plt.colorbar(im, ax=ax, label="Distance")
+		if "legend" in input.Features(): colorbar(im, ax=ax, label="Distance")
 
 		if "y" in input.Features():
 			ax.tick_params(axis="y", labelsize=input.TextSize())
