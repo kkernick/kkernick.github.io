@@ -86,8 +86,6 @@ def server(input: Inputs, output: Outputs, session: Session):
 		"""
 		df = await LoadData()
 
-		df = df.fillna(0)
-
 		names = ["NAME", "ORF", "UNIQID"]
 
 		for name in names:
