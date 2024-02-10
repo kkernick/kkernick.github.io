@@ -69,10 +69,14 @@ def server(input: Inputs, output: Outputs, session: Session):
 			f = Cache[n] if n in Cache else BytesIO(await download(Source + input.Example()))
 
 		match Path(n).suffix:
-			case ".csv": return ChartMatrix(read_csv(f))
-			case ".xlsx": return ChartMatrix(read_excel(f))
-			case ".pdb": return PDBMatrix(f)
-			case _: return ChartMatrix(read_table(f))
+			case ".csv": df = read_csv(f)
+			case ".xlsx": df = read_excel(f)
+			case ".pdb": df = PDBMatrix(f)
+			case _: df = read_table(f)
+
+		# Fix garbage data.
+		df = df.fillna(0)
+		return df
 
 
 	def PDBMatrix(file):

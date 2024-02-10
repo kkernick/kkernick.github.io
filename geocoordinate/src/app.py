@@ -64,9 +64,13 @@ def server(input: Inputs, output: Outputs, session: Session):
 			f = Cache[n] if n in Cache else BytesIO(await download(Source + input.Example()))
 
 		match Path(n).suffix:
-			case ".csv": return read_csv(f)
-			case ".xlsx": return read_excel(f)
-			case _: return read_table(f)
+			case ".csv": df = read_csv(f)
+			case ".xlsx": df = read_excel(f)
+			case _: df = read_table(f)
+
+		# Fix garbage data.
+		df = df.fillna(0)
+		return df
 
 
 	async def LoadMap():

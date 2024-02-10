@@ -69,9 +69,13 @@ def server(input: Inputs, output: Outputs, session: Session):
 			f = Cache[n] if n in Cache else BytesIO(await download(Source + input.Example()))
 
 		match Path(n).suffix:
-			case ".csv": return read_csv(f)
-			case ".xlsx": return read_excel(f)
-			case _: return read_table(f)
+			case ".csv": df = read_csv(f)
+			case ".xlsx": df = read_excel(f)
+			case _: df = read_table(f)
+
+		# Fix garbage data.
+		df = df.fillna(0)
+		return df
 
 
 	async def HandleData():
@@ -82,11 +86,17 @@ def server(input: Inputs, output: Outputs, session: Session):
 		"""
 		df = await LoadData()
 
-		index_col = "NAME" if "NAME" in df.columns else "UNIQID"
-		index_labels = df[index_col]
+		df = df.fillna(0)
+
+		names = ["NAME", "ORF", "UNIQID"]
+
+		for name in names:
+			if name in df.columns:
+				index_labels = df[name]
+				break
 
 		# Drop the naming columns before linkage.
-		data = df.drop(columns=[col for col in ["UNIQID", "NAME"] if col in df.columns])
+		data = df.drop(columns=[col for col in names if col in df.columns])
 		x_labels = ["X" + name if list(data.columns).count(name) == 1 else "X" + name + f".{i+1}" for i, name in enumerate(data.columns)]
 
 		return list(index_labels), x_labels, data
