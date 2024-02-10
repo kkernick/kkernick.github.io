@@ -87,27 +87,27 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 		# Drop the naming columns before linkage.
 		data = df.drop(columns=[col for col in ["UNIQID", "NAME"] if col in df.columns])
-		x_labels = ['X' + name if list(data.columns).count(name) == 1 else 'X' + name + f'.{i+1}' for i, name in enumerate(data.columns)]
+		x_labels = ["X" + name if list(data.columns).count(name) == 1 else "X" + name + f".{i+1}" for i, name in enumerate(data.columns)]
 
 		return list(index_labels), x_labels, data
 
 
 	def GenerateDendrogram(data, ax, orientation, labels = [], invert=False):
 		"""
-		@brief General Dendrogram generator.
-		@param data: The DataFrame that contains the data to generate the Dendrogram from.
+		@brief General dendrogram generator.
+		@param data: The DataFrame that contains the data to generate the dendrogram from.
 		@param ax: The MatPlotLib Axis to assign tick marks to
-		@param orientation: What orientation we should set the Dendrogram to be. Can be "Left", "Right", "Top", or "Bottom"
-		@param labels: An optional list of labels to add the Dendrogram, labelling the X axis on Left/Right, and the Y on Top/Bottom
-		@param invert: Whether to invert the DataFrame to generate Columnular Dendrograms.
-		@returns The Dendrogram, mostly useful to aligning the Heatmap to the new ordering.
+		@param orientation: What orientation we should set the dendrogram to be. Can be "Left", "Right", "Top", or "Bottom"
+		@param labels: An optional list of labels to add the dendrogram, labelling the X axis on Left/Right, and the Y on Top/Bottom
+		@param invert: Whether to invert the DataFrame to generate Columnar dendrograms.
+		@returns The dendrogram, mostly useful to aligning the Heatmap to the new ordering.
 		"""
 
 		matrix = hierarchy.linkage(data.values.T if invert else data.values, method=input.ClusterMethod().lower(), metric=input.DistanceMethod().lower())
 		dendrogram = hierarchy.dendrogram(matrix, ax=ax, orientation=orientation.lower())
 
 		# If there are labels, sort them according to the dendrogram.
-		if labels: labels = [labels[i] for i in dendrogram['leaves']]
+		if labels: labels = [labels[i] for i in dendrogram["leaves"]]
 
 		# Add ticks depending on the orientation.
 		match orientation:
@@ -133,19 +133,19 @@ def server(input: Inputs, output: Outputs, session: Session):
 		fig = figure(figsize=(12, 10))
 		gs = fig.add_gridspec(4, 2, height_ratios=[2, 8, 1, 1], width_ratios=[2, 8], hspace=0, wspace=0)
 
-		# If we render the row dendragram, we change the order of the index labels to match the dendragram.
-		# However, if we aren't rendering it, and thus row_dendragram isn't defined, we simply assign df
+		# If we render the row dendrogram, we change the order of the index labels to match the dendrogram.
+		# However, if we aren't rendering it, and thus row_dendrogram isn't defined, we simply assign df
 		# To data, so the order changes when turning the toggle.
 		if "row" in input.Features():
 			ax_row = fig.add_subplot(gs[1, 0])
 			row_dendrogram = GenerateDendrogram(data, ax_row, "Left")
 			ax_row.axis("off")
-			index_labels = [index_labels[i] for i in row_dendrogram['leaves']]
-			df = data.iloc[row_dendrogram['leaves']]
+			index_labels = [index_labels[i] for i in row_dendrogram["leaves"]]
+			df = data.iloc[row_dendrogram["leaves"]]
 		else:
 			df = data
 
-		# If we render the column dendragram.
+		# If we render the column dendrogram.
 		if "col" in input.Features():
 			ax_col = fig.add_subplot(gs[0, 1])
 			col_dendrogram = GenerateDendrogram(data, ax_col, "Top", invert=True)
@@ -183,7 +183,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 		# If we render the legend.
 		if "legend" in input.Features():
 			ax_cbar = fig.add_subplot(gs[3, 1])
-			cbar = fig.colorbar(heatmap, cax=ax_cbar, orientation='horizontal')
+			cbar = fig.colorbar(heatmap, cax=ax_cbar, orientation="horizontal")
 
 		return fig
 
@@ -205,10 +205,10 @@ def server(input: Inputs, output: Outputs, session: Session):
 		fig = figure(figsize=(12, 10))
 		ax = fig.add_subplot(111)
 
-		ax.spines['top'].set_visible(False)
-		ax.spines['right'].set_visible(False)
-		ax.spines['bottom'].set_visible(False)
-		ax.spines['left'].set_visible(False)
+		ax.spines["top"].set_visible(False)
+		ax.spines["right"].set_visible(False)
+		ax.spines["bottom"].set_visible(False)
+		ax.spines["left"].set_visible(False)
 
 		GenerateDendrogram(data, ax, input.Orientation(), index_labels)
 		return fig
@@ -222,10 +222,10 @@ def server(input: Inputs, output: Outputs, session: Session):
 		fig = figure(figsize=(12, 10))
 		ax = fig.add_subplot(111)
 
-		ax.spines['top'].set_visible(False)
-		ax.spines['right'].set_visible(False)
-		ax.spines['bottom'].set_visible(False)
-		ax.spines['left'].set_visible(False)
+		ax.spines["top"].set_visible(False)
+		ax.spines["right"].set_visible(False)
+		ax.spines["bottom"].set_visible(False)
+		ax.spines["left"].set_visible(False)
 
 		GenerateDendrogram(data, ax, input.Orientation(), x_labels, invert=True)
 		return fig
@@ -314,12 +314,12 @@ app_ui = ui.page_fluid(
 					selected=["row", "col", "x", "y", "legend"])
 			),
 
-			# Settings pertaining to the Dendrogram view.
+			# Settings pertaining to the dendrogram view.
 			ui.panel_conditional(
 				"input.MainTab === 'Row' || input.MainTab === 'Column'",
 				ui.br(),
 
-				# Define the Orientation of the Dendrogram in the Tab
+				# Define the Orientation of the dendrogram in the Tab
 				ui.input_select(id="Orientation", label="Dendrogram Orientation", choices=["Top", "Bottom", "Left", "Right"], selected="Left"),
 			),
 

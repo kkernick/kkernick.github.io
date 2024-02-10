@@ -83,7 +83,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 		"""
 
 		parser = PDBParser()
-		structure = parser.get_structure('protein', file)
+		structure = parser.get_structure("protein", file)
 
 		# Extract atomic coordinates
 		coordinates = []
@@ -119,9 +119,9 @@ def server(input: Inputs, output: Outputs, session: Session):
 			point_names = df["Name"]
 
 		# If explicit coordinates ar eprovided, use them, with the final column used as labels.
-		if 'x' in df.columns and 'y' in df.columns and 'z' in df.columns:
-			coordinates = df[['x', 'y', 'z']].values
-			point_names = df[list(set(df.columns) - set(['x', 'y', 'z']))[0]].values
+		if "x" in df.columns and "y" in df.columns and "z" in df.columns:
+			coordinates = df[["x", "y", "z"]].values
+			point_names = df[list(set(df.columns) - set(["x", "y", "z"]))[0]].values
 
 		# Magic. How this handles all other cases I don't know, but it somehow works.
 		else:
@@ -144,7 +144,19 @@ def server(input: Inputs, output: Outputs, session: Session):
 		fig, ax = subplots()
 
 		im = ax.imshow(df, cmap=input.ColorMap().lower(), interpolation=input.Interpolation().lower())
-		colorbar(im, label="Distance")
+
+		# Visibility of features
+		if "legend" in input.Features(): plt.colorbar(im, ax=ax, label="Distance")
+
+		if "y" in input.Features():
+			ax.tick_params(axis="y", labelsize=input.TextSize())
+		else:
+			ax.set_yticklabels([])
+
+		if "x" in input.Features():
+			ax.tick_params(axis="x", labelsize=input.TextSize())
+		else:
+			ax.set_xticklabels([])
 
 		return ax
 
@@ -212,6 +224,9 @@ app_ui = ui.page_fluid(
 				)
 			),
 
+			# Customize the text size of the axes.
+			ui.input_numeric(id="TextSize", label="Text Size", value=8, min=1, max=50, step=1),
+
 			# https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
 			ui.input_select(id="DistanceMethod", label="Distance Method", choices=[
 				"Braycurtis", "Canberra", "Chebyshev", "Cityblock", "Correlation", "Cosine", "Dice", "Euclidean", "Hamming", "Jaccard", "Jensenshannon", "Kulczynski1", "Mahalanobis", "Matching", "Minkowski", "Rogerstanimoto", "Russellrao", "Seuclidean", "Sokalmichener", "Sokalsneath", "Sqeuclidean", "Yule"], selected="Euclidean"),
@@ -221,6 +236,11 @@ app_ui = ui.page_fluid(
 
 			# Set the ColorMap used.
 			ui.input_select(id="ColorMap", label="Color Map", choices=["Viridis", "Plasma", "Inferno", "Magma", "Cividis"], selected="Viridis"),
+
+			# Customize what aspects of the heatmap are visible
+			ui.input_checkbox_group(id="Features", label="Heatmap Features",
+					choices={"x": "X Labels", "y": "Y Labels", "legend": "Legend"},
+					selected=["legend"]),
 
 			# Specify the PDB Chain
 			ui.input_text("Chain", "PDB Chain", "A"),

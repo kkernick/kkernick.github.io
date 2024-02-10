@@ -107,14 +107,14 @@ def server(input: Inputs, output: Outputs, session: Session):
 		# Add the heatmap and return.
 		Choropleth(
 				geo_data=LoadJSON(),
-				name='choropleth',
+				name="choropleth",
 				data=df,
 				columns=[key, value],
-				key_on='feature.properties.name',
+				key_on="feature.properties.name",
 				fill_color=input.ColorMap(),
 				fill_opacity=input.Opacity(),
 				line_opacity=input.Opacity(),
-				legend_name='Legend',
+				legend_name="Legend",
 				bins=input.Bins()
 		).add_to(map)
 

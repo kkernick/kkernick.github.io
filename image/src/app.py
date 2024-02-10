@@ -101,17 +101,17 @@ def server(input: Inputs, output: Outputs, session: Session):
 		if df.empty: return None
 
 		# Wrangle into an acceptable format.
-		if {'x', 'y', 'value'}.issubset(df.columns):
-			df = df.pivot(index='y', columns='x', values='value')
+		if {"x", "y", "value"}.issubset(df.columns):
+			df = df.pivot(index="y", columns="x", values="value")
 
 		fig, ax = plt.subplots()
 
 		# Add the image as an overlay, if we have one.
-		if img is not None: ax.imshow(img, extent=[0, 1, 0, 1], aspect='auto',zorder=0)
-		im = ax.imshow(df, cmap=input.ColorMap().lower(), interpolation=input.Interpolation().lower(), aspect='auto', extent=[0, 1, 0, 1], zorder=1, alpha=input.Opacity())
+		if img is not None: ax.imshow(img, extent=[0, 1, 0, 1], aspect="auto",zorder=0)
+		im = ax.imshow(df, cmap=input.ColorMap().lower(), interpolation=input.Interpolation().lower(), aspect="auto", extent=[0, 1, 0, 1], zorder=1, alpha=input.Opacity())
 
 		# Visibility of features
-		if "legend" in input.Features(): plt.colorbar(im, ax=ax, label='Value')
+		if "legend" in input.Features(): plt.colorbar(im, ax=ax, label="Value")
 
 		if "y" in input.Features():
 			ax.tick_params(axis="y", labelsize=input.TextSize())
@@ -122,8 +122,6 @@ def server(input: Inputs, output: Outputs, session: Session):
 			ax.tick_params(axis="x", labelsize=input.TextSize())
 		else:
 			ax.set_xticklabels([])
-
-		#plt.tick_params(axis='both', which='both', bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
 
 		return ax
 
@@ -188,10 +186,10 @@ app_ui = ui.page_fluid(
 				)
 			),
 
-			ui.HTML("Heatmap Customization"),
-
+			# Customize the text size of the axes.
 			ui.input_numeric(id="TextSize", label="Text Size", value=8, min=1, max=50, step=1),
 
+			# Customize the opacity of the heatmap, making the background image more visible.
 			ui.input_slider(id="Opacity", label="Heatmap Opacity", value=0.5, min=0.0, max=1.0, step=0.1),
 
 			# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.imshow.html
@@ -200,6 +198,7 @@ app_ui = ui.page_fluid(
 			# Set the ColorMap used.
 			ui.input_select(id="ColorMap", label="Color Map", choices=["Viridis", "Plasma", "Inferno", "Magma", "Cividis"], selected="Viridis"),
 
+			# Customize what aspects of the heatmap are visible
 			ui.input_checkbox_group(id="Features", label="Heatmap Features",
 					choices={"x": "X Labels", "y": "Y Labels", "legend": "Legend"},
 					selected=["legend"]),
