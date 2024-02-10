@@ -52,8 +52,8 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 	async def LoadData():
 		"""
-		@brief Returns a table containing the pairwise matrix.
-		@returns	A DataFrame containing the data requested, formatted as a pairwise matrix, or
+		@brief Returns a table containing the matrix.
+		@returns	A DataFrame containing the data requested, formatted as a  matrix, or
 							an empty DataFrame if we're on Upload, but the user has not supplied a file.
 		"""
 
@@ -75,6 +75,11 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 
 	async def HandleData():
+		"""
+		@brief Extracts the labels for each axis, and returns it alongside a DataFrame containing only the relevant data.
+		@returns	A list containing the labels for the y axis, a list containing the labels for the x axis, and a
+							DataFrame containing the loaded data without those two columns.
+		"""
 		df = await LoadData()
 
 		index_col = "NAME" if "NAME" in df.columns else "UNIQID"
@@ -88,12 +93,23 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 
 	def GenerateDendrogram(data, ax, orientation, labels = [], invert=False):
+		"""
+		@brief General Dendrogram generator.
+		@param data: The DataFrame that contains the data to generate the Dendrogram from.
+		@param ax: The MatPlotLib Axis to assign tick marks to
+		@param orientation: What orientation we should set the Dendrogram to be. Can be "Left", "Right", "Top", or "Bottom"
+		@param labels: An optional list of labels to add the Dendrogram, labelling the X axis on Left/Right, and the Y on Top/Bottom
+		@param invert: Whether to invert the DataFrame to generate Columnular Dendrograms.
+		@returns The Dendrogram, mostly useful to aligning the Heatmap to the new ordering.
+		"""
+
 		matrix = hierarchy.linkage(data.values.T if invert else data.values, method=input.ClusterMethod().lower(), metric=input.DistanceMethod().lower())
 		dendrogram = hierarchy.dendrogram(matrix, ax=ax, orientation=orientation.lower())
 
-		if labels:
-			labels = [labels[i] for i in dendrogram['leaves']]
+		# If there are labels, sort them according to the dendrogram.
+		if labels: labels = [labels[i] for i in dendrogram['leaves']]
 
+		# Add ticks depending on the orientation.
 		match orientation:
 			case "Left" | "Right":
 				ax.set_xticks([])
@@ -275,8 +291,10 @@ app_ui = ui.page_fluid(
 			# https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html#scipy.spatial.distance.pdist
 			ui.input_select(id="DistanceMethod", label="Distance Method", choices=["Braycurtis", "Canberra", "Chebyshev", "Cityblock", "Correlation", "Cosine", "Dice", "Euclidean", "Hamming", "Jaccard", "Jensenshannon", "Kulczynski1", "Mahalanobis", "Matching", "Minkowski", "Rogerstanimoto", "Russellrao", "Seuclidean", "Sokalmichener", "Sokalsneath", "Sqeuclidean", "Yule"], selected="Euclidean"),
 
+			# Customize the text size of the axes.
 			ui.input_numeric(id="TextSize", label="Text Size", value=8, min=1, max=50, step=1),
 
+			# Settings pertaining to the Heatmap view.
 			ui.panel_conditional(
 				"input.MainTab === 'Interactive'",
 				ui.br(),
@@ -296,6 +314,7 @@ app_ui = ui.page_fluid(
 					selected=["row", "col", "x", "y", "legend"])
 			),
 
+			# Settings pertaining to the Dendrogram view.
 			ui.panel_conditional(
 				"input.MainTab === 'Row' || input.MainTab === 'Column'",
 				ui.br(),
@@ -303,7 +322,6 @@ app_ui = ui.page_fluid(
 				# Define the Orientation of the Dendrogram in the Tab
 				ui.input_select(id="Orientation", label="Dendrogram Orientation", choices=["Top", "Bottom", "Left", "Right"], selected="Left"),
 			),
-
 
 			# Add the download buttons. You can download the heatmap by right clicking it :)
 			ui.download_button("DownloadTable", "Download Table"),
