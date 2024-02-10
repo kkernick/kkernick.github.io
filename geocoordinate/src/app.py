@@ -124,8 +124,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 
 	@session.download(filename="heatmap.html")
-	async def DownloadHeatmap(): yield await LoadMap().get_root().render()
-
+	async def DownloadHeatmap(): m = await LoadMap(); yield m.get_root().render()
 
 
 app_ui = ui.page_fluid(
@@ -185,8 +184,9 @@ app_ui = ui.page_fluid(
 			ui.input_slider(id="Blur", label="Blurring", value=15, min=1, max=30, step=1),
 
 			# Add the download buttons.
-			ui.download_button("DownloadHeatmap", "Download Heatmap"),
-			ui.download_button("DownloadTable", "Download Table"),
+			"Download",
+			ui.download_button("DownloadHeatmap", "Heatmap"),
+			ui.download_button("DownloadTable", "Table"),
 
 			id="SidebarPanel",
 		),
