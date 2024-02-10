@@ -182,7 +182,7 @@ app_ui = ui.page_fluid(
 		ui.sidebar(
 
 			# If the user needs help with the formatting.
-			ui.HTML("<a href=https://kkernick.github.io/about/site/index.html>Data Format</a>"),
+			ui.HTML('<a href=https://kkernick.github.io/about/site/index.html target="_blank" rel="noopener noreferrer">Data Format</a>'),
 
 			# Specify whether to use example files, or upload one.
 			ui.input_radio_buttons(id="SourceFile", label="Specify a Source File", choices=["Example", "Upload"], selected="Example", inline=True),
