@@ -120,7 +120,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 
 	@session.download(filename="table.csv")
-	async def DownloadTable(): yield await LoadData().to_string()
+	async def DownloadTable(): df = await LoadData(); yield df.to_string()
 
 
 	@session.download(filename="heatmap.html")
