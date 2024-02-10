@@ -185,14 +185,10 @@ app_ui = ui.page_fluid(
 			ui.input_slider(id="Blur", label="Blurring", value=15, min=1, max=30, step=1),
 
 			# Add the download buttons.
-			ui.layout_columns(
-				ui.download_button("DownloadHeatmap", "Download Heatmap"),
-				ui.download_button("DownloadTable", "Download Table")
-			),
-
+			ui.download_button("DownloadHeatmap", "Download Heatmap"),
+			ui.download_button("DownloadTable", "Download Table"),
 
 			id="SidebarPanel",
-			width=350
 		),
 
 		# Add the main interface tabs.

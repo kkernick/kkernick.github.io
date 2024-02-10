@@ -309,7 +309,6 @@ app_ui = ui.page_fluid(
 			ui.download_button("DownloadTable", "Download Table"),
 
 			id="SidebarPanel",
-			#width=350,
 		),
 
 		# Add the main interface tabs.

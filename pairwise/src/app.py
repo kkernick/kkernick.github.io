@@ -18,7 +18,6 @@
 from shiny import App, Inputs, Outputs, Session, reactive, render, ui
 from shiny.types import FileInfo
 from matplotlib.pyplot import subplots, colorbar
-from matplotlib.backends.backend_agg import FigureCanvasAgg
 from scipy.spatial.distance import pdist, squareform
 from Bio.PDB import PDBParser
 from io import BytesIO
@@ -168,17 +167,6 @@ def server(input: Inputs, output: Outputs, session: Session):
 	async def DownloadTable(): df = await LoadData(); yield df.to_string()
 
 
-	@session.download(filename="heatmap.png")
-	async def DownloadHeatmap():
-		ax = await GenerateHeatmap()
-
-		output = BytesIO()
-		FigureCanvasAgg(ax.figure).print_png(output)
-
-		output.seek(0)
-		yield output.read()
-
-
 app_ui = ui.page_fluid(
 
 	# Welcome back, NavBar :)
@@ -238,13 +226,9 @@ app_ui = ui.page_fluid(
 			ui.input_text("Chain", "PDB Chain", "A"),
 
 			# Add the download buttons.
-			ui.layout_columns(
-				ui.download_button("DownloadTable", "Download Table"),
-				ui.download_button("DownloadHeatmap", "Download Heatmap")
-			),
+			ui.download_button("DownloadTable", "Download Table"),
 
 			id="SidebarPanel",
-			width=350,
 		),
 
 		# Add the main interface tabs.

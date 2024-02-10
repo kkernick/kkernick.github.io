@@ -265,13 +265,10 @@ app_ui = ui.page_fluid(
 			ui.input_slider(id="Bins", label="Number of Colors", value=8, min=3, max=8, step=1),
 
 			# Add the download buttons.
-			ui.layout_columns(
-				ui.download_button("DownloadHeatmap", "Download Heatmap"),
-				ui.download_button("DownloadTable", "Download Table")
-			),
+			ui.download_button("DownloadHeatmap", "Download Heatmap"),
+			ui.download_button("DownloadTable", "Download Table"),
 
 			id="SidebarPanel",
-			width=350
 		),
 
 		# Add the main interface tabs.
