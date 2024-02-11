@@ -69,10 +69,10 @@ def server(input: Inputs, output: Outputs, session: Session):
 			f = Cache[n] if n in Cache else BytesIO(await download(Source + input.Example()))
 
 		match Path(n).suffix:
-			case ".csv": df = read_csv(f)
-			case ".xlsx": df = read_excel(f)
+			case ".csv": df = ChartMatrix(read_csv(f))
+			case ".xlsx": df = ChartMatrix(read_excel(f))
 			case ".pdb": df = PDBMatrix(f)
-			case _: df = read_table(f)
+			case _: df = ChartMatrix(read_table(f))
 
 		# Fix garbage data.
 		df = df.fillna(0)
@@ -98,11 +98,12 @@ def server(input: Inputs, output: Outputs, session: Session):
 									for atom in residue:
 											coordinates.append(atom.coord)
 
-		# Calculate pairwise distances
-		distances = pdist(coordinates, metric=input.DistanceMethod().lower())
-		distance_matrix = squareform(distances)
-
-		return DataFrame(distance_matrix)
+		# Calculate matrix
+		if input.MatrixType() == "Distance":
+			distances = pdist(coordinates, metric=input.DistanceMethod().lower())
+			return DataFrame(squareform(distances))
+		else:
+			return DataFrame(coordinates).corr(method=input.CorrelationMethod().lower())
 
 
 	def ChartMatrix(df):
@@ -133,9 +134,11 @@ def server(input: Inputs, output: Outputs, session: Session):
 			point_names = None
 
 		# Calculate a distant matrix, and return it
-		distances = pdist(coordinates, metric=input.DistanceMethod().lower())
-		distance_matrix = squareform(distances)
-		return DataFrame(distance_matrix, index=point_names, columns=point_names)
+		if input.MatrixType() == "Distance":
+			distances = pdist(coordinates, metric=input.DistanceMethod().lower())
+			return DataFrame(squareform(distances), index=point_names, columns=point_names)
+		else:
+			return DataFrame(coordinates, index=point_names, columns=point_names).corr(method=input.CorrelationMethod().lower())
 
 
 	async def GenerateHeatmap():
@@ -228,12 +231,24 @@ app_ui = ui.page_fluid(
 				)
 			),
 
+			# Specify Matrix Type
+			ui.input_radio_buttons(id="MatrixType", label="Matrix Type", choices=["Distance", "Correlation"], selected="Distance", inline=True),
+
 			# Customize the text size of the axes.
 			ui.input_numeric(id="TextSize", label="Text Size", value=8, min=1, max=50, step=1),
 
 			# https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
-			ui.input_select(id="DistanceMethod", label="Distance Method", choices=[
-				"Braycurtis", "Canberra", "Chebyshev", "Cityblock", "Correlation", "Cosine", "Dice", "Euclidean", "Hamming", "Jaccard", "Jensenshannon", "Kulczynski1", "Mahalanobis", "Matching", "Minkowski", "Rogerstanimoto", "Russellrao", "Seuclidean", "Sokalmichener", "Sokalsneath", "Sqeuclidean", "Yule"], selected="Euclidean"),
+			ui.panel_conditional(
+				"input.MatrixType === 'Distance'",
+				ui.input_select(id="DistanceMethod", label="Distance Method", choices=[
+					"Braycurtis", "Canberra", "Chebyshev", "Cityblock", "Correlation", "Cosine", "Dice", "Euclidean", "Hamming", "Jaccard", "Jensenshannon", "Kulczynski1", "Mahalanobis", "Matching", "Minkowski", "Rogerstanimoto", "Russellrao", "Seuclidean", "Sokalmichener", "Sokalsneath", "Sqeuclidean", "Yule"], selected="Euclidean"),
+			),
+
+			# https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.corr.html
+			ui.panel_conditional(
+				"input.MatrixType === 'Correlation'",
+				ui.input_select(id="CorrelationMethod", label="Correlation Method", choices=["Pearson", "Kendall", "Spearman"], selected="Pearson"),
+			),
 
 			# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.imshow.html
 			ui.input_select(id="Interpolation", label="Interpolation", choices=["None", "Antialiased", "Nearest", "Bilinear", "Bicubic", "Spline16", "Spline36", "Hanning", "Hamming", "Hermite", "Kaiser", "Quadric", "Catrom", "Gaussian", "Bessel", "Mitchell", "Sinc", "Lanczos", "Blackman"], selected="Nearest"),
