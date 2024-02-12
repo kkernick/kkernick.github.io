@@ -20,10 +20,11 @@ from shiny.types import FileInfo
 from matplotlib.pyplot import subplots, colorbar
 from scipy.spatial.distance import pdist, squareform
 from Bio.PDB import PDBParser
+from Bio import SeqIO
 from io import BytesIO
 from sys import modules
 from pathlib import Path
-from pandas import DataFrame, read_csv, read_excel, read_table
+from pandas import DataFrame, Series, read_csv, read_excel, read_table
 
 
 # Interoperability between ShinyLive and PyShiny
@@ -72,11 +73,46 @@ def server(input: Inputs, output: Outputs, session: Session):
 			case ".csv": df = ChartMatrix(read_csv(f))
 			case ".xlsx": df = ChartMatrix(read_excel(f))
 			case ".pdb": df = PDBMatrix(f)
+			case ".fasta": df = FASTAMatrix(f)
 			case _: df = ChartMatrix(read_table(f))
 
 		# Fix garbage data.
 		df = df.fillna(0)
 		return df
+
+
+	def FASTAMatrix(file):
+		"""
+		@brief Computes the pairwise matrix from a FASTA file.
+		@param file: The path to the FASTA File
+		@returns a pairwise matrix.
+		"""
+
+		# Get information from the file
+		records = list(SeqIO.parse(open(file), "fasta"))
+		sequences = [str(record.seq) for record in records]
+		column_names = [record.id for record in records]
+
+		# Get our K-Mer value
+		k = input.K()
+
+		# Generate the value
+		dictionary = {}
+		for x, seq in enumerate(sequences):
+			kmers = [seq[i:i+k] for i in range(len(seq) - k + 1)]
+			increment = 1 / len(kmers)
+			for kmer in kmers:
+					if kmer not in dictionary:
+							dictionary[kmer] = [0.0] * len(sequences)
+					dictionary[kmer][x] += increment
+		frequencies = DataFrame.from_dict(dictionary, orient='index')
+
+		# Calculate matrix
+		if input.MatrixType() == "Distance":
+			distances = pdist(frequencies.T, metric=input.DistanceMethod().lower())
+			return DataFrame(squareform(distances), index=column_names, columns=column_names)
+		else:
+			return frequencies.corr(method=input.CorrelationMethod().lower())
 
 
 	def PDBMatrix(file):
@@ -157,11 +193,15 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 		if "y" in input.Features():
 			ax.tick_params(axis="y", labelsize=input.TextSize())
+			ax.set_yticks(range(len(df.columns)))
+			ax.set_yticklabels(df.columns)
 		else:
 			ax.set_yticklabels([])
 
 		if "x" in input.Features():
 			ax.tick_params(axis="x", labelsize=input.TextSize())
+			ax.set_xticks(range(len(df.columns)))
+			ax.set_xticklabels(df.columns, rotation=90)
 		else:
 			ax.set_xticklabels([])
 
@@ -213,7 +253,7 @@ app_ui = ui.page_fluid(
 			# Only display an input dialog if the user is one Upload
 			ui.panel_conditional(
 				"input.SourceFile === 'Upload'",
-				ui.input_file("File", "Choose a File", accept=[".csv", ".txt", "xlsx", ".pdb", ".dat"], multiple=False),
+				ui.input_file("File", "Choose a File", accept=[".csv", ".txt", "xlsx", ".pdb", ".dat", ".fasta"], multiple=False),
 			),
 
 			# Otherwise, add the example selection and an info button.
@@ -263,6 +303,9 @@ app_ui = ui.page_fluid(
 
 			# Specify the PDB Chain
 			ui.input_text("Chain", "PDB Chain", "A"),
+
+			# Customize the K-mer to compute for FASTA sequences
+			ui.input_numeric(id="K", label="K-Mer Length", value=3, min=3, max=5, step=1),
 
 			# Add the download buttons.
 			ui.download_button("DownloadTable", "Download Table"),
