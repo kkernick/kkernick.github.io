@@ -11,7 +11,6 @@
 # run the following command within this directory:
 #		shiny run
 #
-# Last Modified: 2024/02/10
 #
 
 from shiny import App, Inputs, Outputs, Session, reactive, render, ui
@@ -21,6 +20,7 @@ from pandas import DataFrame, read_csv, read_excel, read_table
 from pathlib import Path
 from io import BytesIO
 from sys import modules
+from copy import deepcopy
 
 
 # Interoperability between ShinyLive and PyShiny
@@ -40,6 +40,8 @@ Mappings = { "africa.geojson": "Africa", "akron.geojson": "Akron", "alameda.geoj
 def server(input: Inputs, output: Outputs, session: Session):
 
 	Cache = {}
+	Base = {}
+
 	Info = {
 		"example1.txt": "This example file is from the Open Data Portal. The data is from a carbon monoxide emissions study conducted by Environment Canada. The three columns represent results from 1990, 2000, and 2013.",
 		"example2.txt": "This example file is from Statistics Canada. The data is adapted from New cases and age-standardized rate for primary cancer (based on the February 2014 CCR tabulation file), by cancer type and sex, Canada, provinces and territories. The columns represent new cancer cases (age-standardized rate per 100,000 population) from 2006 to 2010.",
@@ -47,10 +49,24 @@ def server(input: Inputs, output: Outputs, session: Session):
 	}
 
 
-	async def LoadData():
+	def HandleData(n, i):
 		"""
-		@brief Returns the DataFrame representation of the data to place on the map
-		@returns The DataFrame
+		@brief Given the file name n, handle the file at i
+		@param n The name of the file, extension is used to differentiate
+		@param i The path to the file.
+		"""
+		match Path(n).suffix:
+			case ".csv": df = read_csv(i)
+			case ".xlsx": df = read_excel(i)
+			case _: df = read_table(i)
+		return df.fillna(0)
+
+
+	async def RawData():
+		"""
+		@brief Returns a DataFrame containing the heatmap table
+		@returns 	A DataFrame, who's format can either be a matrix grid, or a chart
+							containing x, y, and value columns.
 		"""
 
 		# Grab an uploaded file, if its done, or grab an example (Using a cache to prevent redownload)
@@ -59,19 +75,17 @@ def server(input: Inputs, output: Outputs, session: Session):
 			if file is None:
 					return DataFrame()
 			n = file[0]["name"]
-			f = file[0]["datapath"]
+
+			if n not in Base: Base[n] = HandleData(n, file[0]["datapath"])
 		else:
 			n = input.Example()
-			f = Cache[n] if n in Cache else BytesIO(await download(Source + input.Example()))
+			if n not in Base: Base[n] = HandleData(n, BytesIO(await download(Source + n)))
 
-		match Path(n).suffix:
-			case ".csv": df = read_csv(f)
-			case ".xlsx": df = read_excel(f)
-			case _: df = read_table(f)
+		if n not in Cache: Cache[n] = deepcopy(Base[n])
+		return n
 
-		# Fix garbage data.
-		df = df.fillna(0)
-		return df
+
+	async def LoadData(): n = await RawData(); return DataFrame() if n is None else Cache[n]
 
 
 	def LoadJSON():
@@ -128,12 +142,14 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 
 	@output
-	@render.table
+	@render.data_frame
+	@reactive.event(input.Update, input.Reset, input.Example, input.File, ignore_none=False, ignore_init=False)
 	async def LoadedTable(): return await LoadData()
 
 
 	@output
 	@render.ui
+	@reactive.event(input.Update, input.Reset, input.Example, input.File, input.UpdateMap, ignore_none=False, ignore_init=False)
 	async def Map(): return await LoadMap()
 
 
@@ -142,16 +158,17 @@ def server(input: Inputs, output: Outputs, session: Session):
 	def ExampleInfo(): return Info[input.Example()]
 
 
-	@session.download(filename="table.csv")
+	@render.download(filename="table.csv")
 	async def DownloadTable(): df = await LoadData(); yield df.to_string()
 
 
-	@session.download(filename="heatmap.html")
+	@render.download(filename="heatmap.html")
 	async def DownloadHeatmap(): m = await LoadMap(); yield m.get_root().render()
 
 
 	@reactive.Effect
-	async def _():
+	@reactive.event(input.Update, input.Reset, input.Example, input.File, ignore_none=False, ignore_init=False)
+	async def UpdateColumns():
 
 		# Give options for the key and value columns
 		df = await LoadData()
@@ -162,6 +179,50 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 			ui.update_select(id="KeyColumn", choices=choices, selected=default_key)
 			ui.update_select(id="ValueColumn", choices=choices, selected=default_value)
+
+
+	@reactive.Effect
+	@reactive.event(input.Update)
+	async def Update():
+		"""
+		@brief Updates the value in the table with the one the user typed in upon updating
+		"""
+
+		# Get the data
+		df = await LoadData()
+
+		row_count, column_count = df.shape
+		row, column = input.TableRow(), input.TableCol()
+
+		# So long as row and column are sane, update.
+		if row < row_count and column < column_count:
+			try:
+				match input.Type():
+					case "Integer": df.iloc[row, column] = int(input.TableVal())
+					case "Float": df.iloc[row, column] = float(input.TableVal())
+					case "String": df.iloc[row, column] = input.TableVal()
+			except ValueError:
+				pass
+
+
+	@reactive.Effect
+	@reactive.event(input.Reset)
+	async def Reset(): del Cache[await RawData()]
+
+
+	@reactive.Effect
+	@reactive.event(input.TableRow, input.TableCol, input.Example, input.File, input.Reset, input.Update)
+	async def UpdateTableValue():
+		"""
+		@brief Updates the label for the Value input to display the current value.
+		"""
+		df = await LoadData()
+
+		rows, columns = df.shape
+		row, column = int(input.TableRow()), int(input.TableCol())
+
+		if 0 <= row <= rows and 0 <= column <= columns:
+			ui.update_text(id="TableVal", label="Value (" + str(df.iloc[row, column]) + ")"),
 
 
 app_ui = ui.page_fluid(
@@ -221,14 +282,12 @@ app_ui = ui.page_fluid(
 				ui.input_select(id="JSONSelection", label=None, choices=Mappings, multiple=False, selected="canada.geojson"),
 			),
 
-			"Table Customization",
+			ui.input_action_button("UpdateMap", "Update Heatmap"),
+
+			ui.br(),
 
 			ui.input_select(id="KeyColumn", label="Key", choices=[], multiple=False),
 			ui.input_select(id="ValueColumn", label="Value", choices=[], multiple=False),
-
-
-			# All the features related to map customization are here.
-			"Map Customization",
 
 			# Only OpenStreatMap and CartoDB Positron seem to work.
 			ui.input_radio_buttons(id="MapType", label="Map Type", choices=["OpenStreetMap", "CartoDB Positron"], selected="CartoDB Positron"),
@@ -279,7 +338,20 @@ app_ui = ui.page_fluid(
 		# Add the main interface tabs.
 		ui.navset_tab(
 				ui.nav_panel("Interactive", ui.output_ui("Map")),
-				ui.nav_panel("Table", ui.output_table("LoadedTable"),),
+				ui.nav_panel("Table",
+					ui.layout_columns(
+						ui.input_numeric("TableRow", "Row", 0),
+						ui.input_numeric("TableCol", "Column", 0),
+						ui.input_text("TableVal", "Value", 0),
+						ui.input_select(id="Type", label="Datatype", choices=["Integer", "Float", "String"]),
+						col_widths=[2,2,6,2],
+					),
+					ui.layout_columns(
+						ui.input_action_button("Update", "Update"),
+						ui.input_action_button("Reset", "Reset Values"),
+					),
+					ui.output_data_frame("LoadedTable"),
+				),
 		),
 	)
 )

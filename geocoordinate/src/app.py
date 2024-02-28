@@ -60,6 +60,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 			case _: df = read_table(i)
 		return df.fillna(0)
 
+
 	async def RawData():
 		"""
 		@brief Returns a DataFrame containing the heatmap table
@@ -129,7 +130,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 	@output
 	@render.ui
-	@reactive.event(input.Update, input.Reset, input.Example, input.File, ignore_none=False, ignore_init=False)
+	@reactive.event(input.Update, input.Reset, input.Example, input.File, input.UpdateMap, ignore_none=False, ignore_init=False)
 	async def Map(): return await LoadMap()
 
 
@@ -184,7 +185,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 		row, column = int(input.TableRow()), int(input.TableCol())
 
 		if 0 <= row <= rows and 0 <= column <= columns:
-			ui.update_text(id="TableVal", label="Value (" + str(df.iloc[row, column]) + ")", value=0),
+			ui.update_text(id="TableVal", label="Value (" + str(df.iloc[row, column]) + ")"),
 
 
 app_ui = ui.page_fluid(
@@ -233,21 +234,7 @@ app_ui = ui.page_fluid(
 				)
 			),
 
-			ui.layout_columns(
-				ui.input_action_button("Update", "Update"),
-				ui.popover(ui.input_action_link(id="UpdateInfo", label="?"),
-					"Heatmapper will automatically update the heatmap when you change the file source. However, when modifying the table or changing feature visibility, you'll need to update the view manually."
-				),
-				col_widths=[11,1],
-			),
-
-			ui.layout_columns(
-				ui.input_action_button("Reset", "Reset Values"),
-				ui.popover(ui.input_action_link(id="ResetInfo", label="?"),
-					"If you modify the values displayed in the Table Tab, you can reset the values back to their original state with this button."
-				),
-				col_widths=[11,1],
-			),
+			ui.input_action_button("UpdateMap", "Update Heatmap"),
 
 			ui.br(),
 
@@ -279,6 +266,10 @@ app_ui = ui.page_fluid(
 						ui.input_text("TableVal", "Value", 0),
 						ui.input_select(id="Type", label="Datatype", choices=["Integer", "Float", "String"]),
 						col_widths=[2,2,6,2],
+					),
+					ui.layout_columns(
+						ui.input_action_button("Update", "Update"),
+						ui.input_action_button("Reset", "Reset Values"),
 					),
 					ui.output_data_frame("LoadedTable"),
 				),
