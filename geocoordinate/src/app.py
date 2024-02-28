@@ -24,6 +24,8 @@ from io import BytesIO
 from sys import modules
 from copy import deepcopy
 
+from shared import Table
+
 # Fine, Shiny
 import branca, certifi, xyzservices
 
@@ -262,20 +264,7 @@ app_ui = ui.page_fluid(
 		# Add the main interface tabs.
 		ui.navset_tab(
 				ui.nav_panel("Interactive", ui.output_ui("Map")),
-				ui.nav_panel("Table",
-					ui.layout_columns(
-						ui.input_numeric("TableRow", "Row", 0),
-						ui.input_numeric("TableCol", "Column", 0),
-						ui.input_text("TableVal", "Value", 0),
-						ui.input_select(id="Type", label="Datatype", choices=["Integer", "Float", "String"]),
-						col_widths=[2,2,6,2],
-					),
-					ui.layout_columns(
-						ui.input_action_button("Update", "Update"),
-						ui.input_action_button("Reset", "Reset Values"),
-					),
-					ui.output_data_frame("LoadedTable"),
-				),
+				Table,
 		),
 	)
 )
