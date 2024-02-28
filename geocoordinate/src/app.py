@@ -24,6 +24,9 @@ from io import BytesIO
 from sys import modules
 from copy import deepcopy
 
+# Fine, Shiny
+import branca, certifi, xyzservices
+
 
 # Interoperability between ShinyLive and PyShiny
 if "pyodide" in modules:
