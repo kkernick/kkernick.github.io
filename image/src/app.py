@@ -22,6 +22,7 @@ from PIL import Image
 from io import BytesIO
 from sys import modules
 from pathlib import Path
+from copy import deepcopy
 
 
 # Interoperability between ShinyLive and PyShiny
@@ -38,6 +39,7 @@ else:
 def server(input: Inputs, output: Outputs, session: Session):
 
 	# Cache the example to prevent multiple fetches.
+	Base = {}
 	Cache = {}
 
 	# Information regarding example files.
@@ -50,7 +52,19 @@ def server(input: Inputs, output: Outputs, session: Session):
 	}
 
 
-	async def LoadData():
+	def HandleData(n, i):
+		"""
+		@brief Given the file name n, handle the file at i
+		@param n The name of the file, extension is used to differentiate
+		@param i The path to the file.
+		"""
+		match Path(n).suffix:
+			case ".csv": df = read_csv(i)
+			case ".xlsx": df = read_excel(i)
+			case _: df = read_table(i)
+		return df.fillna(0)
+
+	async def RawData():
 		"""
 		@brief Returns a DataFrame containing the heatmap table
 		@returns 	A DataFrame, who's format can either be a matrix grid, or a chart
@@ -63,19 +77,19 @@ def server(input: Inputs, output: Outputs, session: Session):
 			if file is None:
 					return DataFrame()
 			n = file[0]["name"]
-			f = file[0]["datapath"]
+
+			if n not in Base: Base[n] = HandleData(n, file[0]["datapath"])
 		else:
-			n = input.Example()
-			f = Cache[n] if n in Cache else BytesIO(await download(Source + Info[input.Example()]["Table"]))
-
-		match Path(n).suffix:
-			case ".csv": df = read_csv(f)
-			case ".xlsx": df = read_excel(f)
-			case _: df = read_table(f)
-
-		# Fix garbage data.
-		df = df.fillna(0)
-		return df
+			n = Info[input.Example()]["Table"]
+			if n not in Base: Base[n] = HandleData(n, BytesIO(await download(Source + n)))
+		
+		if n not in Cache: Cache[n] = deepcopy(Base[n])	
+		return n
+		
+	
+	async def LoadData():
+		n = await RawData()
+		return DataFrame() if n is None else Cache[n]
 
 
 	async def LoadImage():
@@ -89,8 +103,8 @@ def server(input: Inputs, output: Outputs, session: Session):
 			file: list[FileInfo] | None = input.Image()
 			return None if file is None else Image.open(file[0]["datapath"])
 		else:
-			n = input.Example()
-			return Cache[n] if n in Cache else Image.open(BytesIO(await download(Source + Info[input.Example()]["Image"])))
+			n = Info[input.Example()]["Image"]
+			return Cache[n] if n in Cache else Image.open(BytesIO(await download(Source + n)))
 
 
 	async def GenerateHeatmap():
@@ -99,7 +113,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 		@returns The Plot's axis, for downloading purposes.
 		"""
 
-		df = await LoadData()
+		n = await LoadData(); df = DataFrame() if n is None else Cache[n]
 		img = await LoadImage()
 
 		if df.empty: return None
@@ -131,12 +145,14 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 
 	@output
-	@render.table
+	@render.data_frame
+	@reactive.event(input.Update, input.Reset, ignore_none=False, ignore_init=False)
 	async def LoadedTable(): return await LoadData()
 
 
 	@output
 	@render.plot
+	@reactive.event(input.Update, input.Reset, ignore_none=False, ignore_init=False)
 	async def Heatmap(): return await GenerateHeatmap()
 
 
@@ -145,8 +161,34 @@ def server(input: Inputs, output: Outputs, session: Session):
 	def ExampleInfo(): return Info[input.Example()]["Description"]
 
 
-	@session.download(filename="table.csv")
+	@render.download(filename="table.csv")
 	async def DownloadTable(): df = await LoadData(); yield df.to_string()
+
+
+	@reactive.Effect
+	@reactive.event(input.Update)
+	async def Update():
+		"""
+		@brief Updates the value in the table with the one the user typed in upon updating
+		"""
+
+		# Get the data
+		df = await LoadData()
+
+		row_count, column_count = df.shape
+		row, column = input.TableRow(), input.TableCol()
+
+		# So long as row and column are sane, update.
+		if row < row_count and column < column_count:
+			match input.Type():
+				case "Integer": df.iloc[row, column] = int(input.TableVal())
+				case "Float": df.iloc[row, column] = float(input.TableVal())
+				case "String": df.iloc[row, column] = input.TableVal()
+
+
+	@reactive.Effect
+	@reactive.event(input.Reset)
+	async def Reset(): del Cache[await RawData()]
 
 
 app_ui = ui.page_fluid(
@@ -190,6 +232,9 @@ app_ui = ui.page_fluid(
 				)
 			),
 
+			ui.input_action_button("Update", "Update"),
+			ui.input_action_button("Reset", "Reset Values"),
+
 			# Customize the text size of the axes.
 			ui.input_numeric(id="TextSize", label="Text Size", value=8, min=1, max=50, step=1),
 
@@ -216,7 +261,17 @@ app_ui = ui.page_fluid(
 		# Add the main interface tabs.
 		ui.navset_tab(
 				ui.nav_panel("Interactive", ui.output_plot("Heatmap", height="90vh")),
-				ui.nav_panel("Table", ui.output_table("LoadedTable"),),
+				ui.nav_panel("Table",
+					ui.layout_columns(
+						ui.input_numeric("TableRow", "Row", 0),
+						ui.input_numeric("TableCol", "Column", 0),
+						ui.input_text("TableVal", "Value", 0),
+						ui.input_select(id="Type", label="Datatype", choices=["Integer", "Float", "String"]),
+						col_widths=[2,2,6,2],
+					),
+
+					ui.output_data_frame("LoadedTable"),
+				),
 		),
 	)
 )

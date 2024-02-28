@@ -281,26 +281,6 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 
 	@reactive.Effect
-	@reactive.event(input.TableRow, input.TableCol)
-	async def UpdateValue():
-		"""
-		@brief Updates the value displayed in the TableVal input when the user changes Row/Column
-	  """
-
-		n = await RawData()
-		df = DataFrame() if n is None else Cache[n]
-
-		row_count, column_count = df.shape
-		row, column = input.TableRow(), input.TableCol()
-
-		if row < 0 or row > row_count: row = 0
-		if column < 0 or column > column_count: column = 0
-
-		if row < row_count and column < column_count:
-			ui.update_text(id="TableVal", label="Value", value=df.iloc[row, column])
-
-
-	@reactive.Effect
 	@reactive.event(input.Update)
 	async def Update():
 		"""
@@ -315,7 +295,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 		row, column = input.TableRow(), input.TableCol()
 
 		# So long as row and column are sane, update.
-		if row and column and row < row_count and column < column_count:
+		if row < row_count and column < column_count:
 			match input.Type():
 				case "Integer": df.iloc[row, column] = int(input.TableVal())
 				case "Float": df.iloc[row, column] = float(input.TableVal())
@@ -371,7 +351,7 @@ app_ui = ui.page_fluid(
 					col_widths=[10,2],
 				)
 			),
-
+			
 			ui.input_action_button("Update", "Update"),
 			ui.input_action_button("Reset", "Reset Values"),
 
