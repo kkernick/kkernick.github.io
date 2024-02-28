@@ -52,6 +52,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 		"example3.txt": "This example dataset is retrieved from the online supplement to Eisen et al. (1998), which is a very well known paper about cluster analysis and visualization. The details of how the data was collected are outlined in the paper."
 	}
 
+
 	def HandleData(n, i):
 		"""
 		@brief Given the file name n, handle the file at i
@@ -63,6 +64,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 			case ".xlsx": df = read_excel(i)
 			case _: df = read_table(i)
 		return df.fillna(0)
+
 
 	async def RawData():
 		"""
@@ -290,7 +292,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 
 	@reactive.Effect
-	@reactive.event(input.TableRow, input.TableCol, input.Example, input.File)
+	@reactive.event(input.TableRow, input.TableCol, input.Example, input.File, input.Reset, input.Update)
 	async def UpdateTableValue():
 		"""
 		@brief Updates the label for the Value input to display the current value.

@@ -64,6 +64,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 			case _: df = read_table(i)
 		return df.fillna(0)
 
+
 	async def RawData():
 		"""
 		@brief Returns a DataFrame containing the heatmap table
@@ -190,7 +191,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 
 	@reactive.Effect
-	@reactive.event(input.TableRow, input.TableCol, input.Example, input.File)
+	@reactive.event(input.TableRow, input.TableCol, input.Example, input.File, input.Reset, input.Update)
 	async def UpdateTableValue():
 		"""
 		@brief Updates the label for the Value input to display the current value.
