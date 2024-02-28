@@ -24,6 +24,8 @@ from io import BytesIO
 from sys import modules
 from pathlib import Path
 from pandas import DataFrame, read_csv, read_excel, read_table
+from copy import deepcopy
+
 
 
 # Interoperability between ShinyLive and PyShiny
@@ -41,6 +43,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 	# Cache for examples. We can't assume users will have unique file names, so we cannot use the cache for
 	# Uploaded files. Regardless, this prevents the application from fetching the example every time its needed.
 	Cache = {}
+	Base = {}
 
 	# Information about the Examples
 	Info = {
@@ -49,12 +52,23 @@ def server(input: Inputs, output: Outputs, session: Session):
 		"example3.txt": "This example dataset is retrieved from the online supplement to Eisen et al. (1998), which is a very well known paper about cluster analysis and visualization. The details of how the data was collected are outlined in the paper."
 	}
 
-
-	async def LoadData():
+	def HandleData(n, i):
 		"""
-		@brief Returns a table containing the matrix.
-		@returns	A DataFrame containing the data requested, formatted as a  matrix, or
-							an empty DataFrame if we're on Upload, but the user has not supplied a file.
+		@brief Given the file name n, handle the file at i
+		@param n The name of the file, extension is used to differentiate
+		@param i The path to the file.
+		"""
+		match Path(n).suffix:
+			case ".csv": df = read_csv(i)
+			case ".xlsx": df = read_excel(i)
+			case _: df = read_table(i)
+		return df.fillna(0)
+
+	async def RawData():
+		"""
+		@brief Returns a DataFrame containing the heatmap table
+		@returns 	A DataFrame, who's format can either be a matrix grid, or a chart
+							containing x, y, and value columns.
 		"""
 
 		# Grab an uploaded file, if its done, or grab an example (Using a cache to prevent redownload)
@@ -63,22 +77,20 @@ def server(input: Inputs, output: Outputs, session: Session):
 			if file is None:
 					return DataFrame()
 			n = file[0]["name"]
-			f = file[0]["datapath"]
+
+			if n not in Base: Base[n] = HandleData(n, file[0]["datapath"])
 		else:
 			n = input.Example()
-			f = Cache[n] if n in Cache else BytesIO(await download(Source + input.Example()))
+			if n not in Base: Base[n] = HandleData(n, BytesIO(await download(Source + n)))
 
-		match Path(n).suffix:
-			case ".csv": df = read_csv(f)
-			case ".xlsx": df = read_excel(f)
-			case _: df = read_table(f)
-
-		# Fix garbage data.
-		df = df.fillna(0)
-		return df
+		if n not in Cache: Cache[n] = deepcopy(Base[n])
+		return n
 
 
-	async def HandleData():
+	async def LoadData(): n = await RawData(); return DataFrame() if n is None else Cache[n]
+
+
+	async def ProcessData():
 		"""
 		@brief Extracts the labels for each axis, and returns it alongside a DataFrame containing only the relevant data.
 		@returns	A list containing the labels for the y axis, a list containing the labels for the x axis, and a
@@ -135,7 +147,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 		@returns The heatmap
 		"""
 
-		index_labels, x_labels, data = await HandleData()
+		index_labels, x_labels, data = await ProcessData()
 
 		# Create a figure with a heatmap and associated dendrograms
 		fig = figure(figsize=(12, 10))
@@ -197,18 +209,21 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 
 	@output
-	@render.table
+	@render.data_frame
+	@reactive.event(input.Update, input.Reset, input.Example, input.File, ignore_none=False, ignore_init=False)
 	async def LoadedTable(): return await LoadData()
 
 	@output
 	@render.plot
+	@reactive.event(input.Update, input.Reset, input.Example, input.File, ignore_none=False, ignore_init=False)
 	async def Heatmap(): return await GenerateHeatmap()
 
 
 	@output
 	@render.plot
+	@reactive.event(input.Update, input.Reset, input.Example, input.File, ignore_none=False, ignore_init=False)
 	async def RowDendrogram():
-		index_labels, _, data = await HandleData()
+		index_labels, _, data = await ProcessData()
 
 		fig = figure(figsize=(12, 10))
 		ax = fig.add_subplot(111)
@@ -224,8 +239,9 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 	@output
 	@render.plot
+	@reactive.event(input.Update, input.Reset, input.Example, input.File, ignore_none=False, ignore_init=False)
 	async def ColumnDendrogram():
-		_, x_labels, data = await HandleData()
+		_, x_labels, data = await ProcessData()
 
 		fig = figure(figsize=(12, 10))
 		ax = fig.add_subplot(111)
@@ -244,8 +260,48 @@ def server(input: Inputs, output: Outputs, session: Session):
 	def ExampleInfo(): return Info[input.Example()]
 
 
-	@session.download(filename="table.csv")
+	@render.download(filename="table.csv")
 	async def DownloadTable(): df = await LoadData(); yield df.to_string()
+
+	@reactive.Effect
+	@reactive.event(input.Update)
+	async def Update():
+		"""
+		@brief Updates the value in the table with the one the user typed in upon updating
+		"""
+
+		# Get the data
+		df = await LoadData()
+
+		row_count, column_count = df.shape
+		row, column = input.TableRow(), input.TableCol()
+
+		# So long as row and column are sane, update.
+		if row < row_count and column < column_count:
+			match input.Type():
+				case "Integer": df.iloc[row, column] = int(input.TableVal())
+				case "Float": df.iloc[row, column] = float(input.TableVal())
+				case "String": df.iloc[row, column] = input.TableVal()
+
+
+	@reactive.Effect
+	@reactive.event(input.Reset)
+	async def Reset(): del Cache[await RawData()]
+
+
+	@reactive.Effect
+	@reactive.event(input.TableRow, input.TableCol, input.Example, input.File)
+	async def UpdateTableValue():
+		"""
+		@brief Updates the label for the Value input to display the current value.
+		"""
+		df = await LoadData()
+
+		rows, columns = df.shape
+		row, column = int(input.TableRow()), int(input.TableCol())
+
+		if 0 <= row <= rows and 0 <= column <= columns:
+			ui.update_text(id="TableVal", label="Value (" + str(df.iloc[row, column]) + ")", value=0),
 
 
 app_ui = ui.page_fluid(
@@ -292,6 +348,24 @@ app_ui = ui.page_fluid(
 					col_widths=[10,2],
 				)
 			),
+
+			ui.layout_columns(
+				ui.input_action_button("Update", "Update"),
+				ui.popover(ui.input_action_link(id="UpdateInfo", label="?"),
+					"Heatmapper will automatically update the heatmap when you change the file source. However, when modifying the table or changing feature visibility, you'll need to update the view manually."
+				),
+				col_widths=[11,1],
+			),
+
+			ui.layout_columns(
+				ui.input_action_button("Reset", "Reset Values"),
+				ui.popover(ui.input_action_link(id="ResetInfo", label="?"),
+					"If you modify the values displayed in the Table Tab, you can reset the values back to their original state with this button."
+				),
+				col_widths=[11,1],
+			),
+
+			ui.br(),
 
 			# https://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html
 			ui.input_select(id="ClusterMethod", label="Clustering Method", choices=["Single", "Complete", "Average", "Weighted", "Centroid", "Median", "Ward"], selected="Average"),
@@ -342,8 +416,16 @@ app_ui = ui.page_fluid(
 				ui.nav_panel("Interactive", ui.output_plot("Heatmap", height="90vh"), value="Interactive"),
 				ui.nav_panel("Row Dendrogram", ui.output_plot("RowDendrogram", height="90vh"), value="Row"),
 				ui.nav_panel("Column Dendrogram", ui.output_plot("ColumnDendrogram", height="90vh"), value="Column"),
-				ui.nav_panel("Table", ui.output_table("LoadedTable"), value="Table"),
-
+				ui.nav_panel("Table",
+					ui.layout_columns(
+						ui.input_numeric("TableRow", "Row", 0),
+						ui.input_numeric("TableCol", "Column", 0),
+						ui.input_text("TableVal", "Value", 0),
+						ui.input_select(id="Type", label="Datatype", choices=["Integer", "Float", "String"]),
+						col_widths=[2,2,6,2],
+					),
+					ui.output_data_frame("LoadedTable"),
+				),
 				id="MainTab"
 		),
 	)

@@ -82,14 +82,12 @@ def server(input: Inputs, output: Outputs, session: Session):
 		else:
 			n = Info[input.Example()]["Table"]
 			if n not in Base: Base[n] = HandleData(n, BytesIO(await download(Source + n)))
-		
-		if n not in Cache: Cache[n] = deepcopy(Base[n])	
+
+		if n not in Cache: Cache[n] = deepcopy(Base[n])
 		return n
-		
-	
-	async def LoadData():
-		n = await RawData()
-		return DataFrame() if n is None else Cache[n]
+
+
+	async def LoadData(): n = await RawData(); return DataFrame() if n is None else Cache[n]
 
 
 	async def LoadImage():
@@ -113,7 +111,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 		@returns The Plot's axis, for downloading purposes.
 		"""
 
-		n = await LoadData(); df = DataFrame() if n is None else Cache[n]
+		df = await LoadData()
 		img = await LoadImage()
 
 		if df.empty: return None
@@ -146,13 +144,13 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 	@output
 	@render.data_frame
-	@reactive.event(input.Update, input.Reset, ignore_none=False, ignore_init=False)
+	@reactive.event(input.Update, input.Reset, input.Example, input.File, ignore_none=False, ignore_init=False)
 	async def LoadedTable(): return await LoadData()
 
 
 	@output
 	@render.plot
-	@reactive.event(input.Update, input.Reset, ignore_none=False, ignore_init=False)
+	@reactive.event(input.Update, input.Reset, input.Example, input.File, ignore_none=False, ignore_init=False)
 	async def Heatmap(): return await GenerateHeatmap()
 
 
@@ -189,6 +187,21 @@ def server(input: Inputs, output: Outputs, session: Session):
 	@reactive.Effect
 	@reactive.event(input.Reset)
 	async def Reset(): del Cache[await RawData()]
+
+
+	@reactive.Effect
+	@reactive.event(input.TableRow, input.TableCol, input.Example, input.File)
+	async def UpdateTableValue():
+		"""
+		@brief Updates the label for the Value input to display the current value.
+		"""
+		df = await LoadData()
+
+		rows, columns = df.shape
+		row, column = int(input.TableRow()), int(input.TableCol())
+
+		if 0 <= row <= rows and 0 <= column <= columns:
+			ui.update_text(id="TableVal", label="Value (" + str(df.iloc[row, column]) + ")", value=0),
 
 
 app_ui = ui.page_fluid(
@@ -232,8 +245,23 @@ app_ui = ui.page_fluid(
 				)
 			),
 
-			ui.input_action_button("Update", "Update"),
-			ui.input_action_button("Reset", "Reset Values"),
+			ui.layout_columns(
+				ui.input_action_button("Update", "Update"),
+				ui.popover(ui.input_action_link(id="UpdateInfo", label="?"),
+					"Heatmapper will automatically update the heatmap when you change the file source. However, when modifying the table or changing feature visibility, you'll need to update the view manually."
+				),
+				col_widths=[11,1],
+			),
+
+			ui.layout_columns(
+				ui.input_action_button("Reset", "Reset Values"),
+				ui.popover(ui.input_action_link(id="ResetInfo", label="?"),
+					"If you modify the values displayed in the Table Tab, you can reset the values back to their original state with this button."
+				),
+				col_widths=[11,1],
+			),
+
+			ui.br(),
 
 			# Customize the text size of the axes.
 			ui.input_numeric(id="TextSize", label="Text Size", value=8, min=1, max=50, step=1),
@@ -269,7 +297,6 @@ app_ui = ui.page_fluid(
 						ui.input_select(id="Type", label="Datatype", choices=["Integer", "Float", "String"]),
 						col_widths=[2,2,6,2],
 					),
-
 					ui.output_data_frame("LoadedTable"),
 				),
 		),
