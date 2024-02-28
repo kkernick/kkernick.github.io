@@ -269,7 +269,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 	@output
 	@render.plot
 	@reactive.event(input.Update, input.Reset, ignore_none=False, ignore_init=False)
-	async def Heatmap(): return [await GenerateHeatmap(), await GenerateHeatmap()]
+	async def Heatmap(): return await GenerateHeatmap()
 
 	@output
 	@render.text
