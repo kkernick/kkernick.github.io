@@ -25,6 +25,7 @@ from io import BytesIO
 from sys import modules
 from pathlib import Path
 from pandas import DataFrame, Series, read_csv, read_excel, read_table
+from copy import deepcopy
 
 
 # Interoperability between ShinyLive and PyShiny
@@ -39,9 +40,22 @@ else:
 
 
 def server(input: Inputs, output: Outputs, session: Session):
-	# Cache for examples. We can't assume users will have unique file names, so we cannot use the cache for
-	# Uploaded files. Regardless, this prevents the application from fetching the example every time its needed.
+
+	# We use a two-tiered cache system to allow the user to modify files without requiring
+	# re-fetching to restore the original values.
+	#
+	# Base is the immutable, primary cache, that contains the contents of files (example or uploaded)
+	# in their original form. Nothing is allowed to modify the contents of values in Base, nor are they
+	# allowed to be exposed to the user in any capacity. If Base is not populated, content will be fetched
+	# Externally (Either by opening a user-supplied file, or fetching the content online)
+	#
+	# Cache is the modifiable, secondary cache, that contains the content of Base. The user is only provided
+	# Data via Cache, as an abstraction of Base. If Cache is not populated, content will be fetched by making
+	# A copy of the value within Base.
+	Base = {}
 	Cache = {}
+
+
 
 	# Information about the Examples
 	Info = {
@@ -51,6 +65,46 @@ def server(input: Inputs, output: Outputs, session: Session):
 	}
 
 
+	def HandleData(n, i):
+		"""
+		@brief Given the file name n, handle the file at i
+		@param n The name of the file, extension is used to differentiate
+		@param i The path to the file.
+		"""
+		match Path(n).suffix:
+			case ".csv": return read_csv(i)
+			case ".xlsx": return read_excel(i)
+			case ".pdb": return PDBMatrix(i)
+			case ".fasta": return FASTAMatrix(i)
+			case _: return read_table(i)
+
+
+	async def RawData():
+		"""
+		@brief Returns the raw data that has been supplied, before modifying it into a matrix.
+		@returns the name associated with the values stored in the Cache.
+		"""
+
+		# Grab an uploaded file, if its done, or grab an example (Using a cache to prevent redownload)
+		if input.SourceFile() == "Upload":
+			file: list[FileInfo] | None = input.File()
+			if file is None: return None
+			n = file[0]["name"]
+
+			# Populate the base cache, if we need to
+			if n not in Base: Base[n] = HandleData(n, read(file[0]["datapath"], "wb"))
+
+		else:
+			n = input.Example()
+
+			# Populate the base cache, if we need to
+			if n not in Base: Base[n] = HandleData(n, BytesIO(await download(Source + input.Example())))
+
+		# Populate the secondary cache if we need to, and return the name for lookup.
+		if n not in Cache: Cache[n] = deepcopy(Base[n])
+		return n
+
+
 	async def LoadData():
 		"""
 		@brief Returns a table containing the pairwise matrix.
@@ -58,27 +112,19 @@ def server(input: Inputs, output: Outputs, session: Session):
 							an empty DataFrame if we're on Upload, but the user has not supplied a file.
 		"""
 
-		# Grab an uploaded file, if its done, or grab an example (Using a cache to prevent redownload)
-		if input.SourceFile() == "Upload":
-			file: list[FileInfo] | None = input.File()
-			if file is None:
-					return DataFrame()
-			n = file[0]["name"]
-			f = file[0]["datapath"]
-		else:
-			n = input.Example()
-			f = Cache[n] if n in Cache else BytesIO(await download(Source + input.Example()))
+		n = await RawData()
+		df = DataFrame() if n is None else Cache[n]
+		if n is None: return DataFrame()
 
 		match Path(n).suffix:
-			case ".csv": df = ChartMatrix(read_csv(f))
-			case ".xlsx": df = ChartMatrix(read_excel(f))
-			case ".pdb": df = PDBMatrix(f)
-			case ".fasta": df = FASTAMatrix(f)
-			case _: df = ChartMatrix(read_table(f))
+			case ".csv": df = ChartMatrix(df)
+			case ".xlsx": df = ChartMatrix(df)
+			case ".pdb": pass
+			case ".fasta": pass
+			case _: df = ChartMatrix(df)
 
-		# Fix garbage data.
-		df = df.fillna(0)
-		return df
+		# Fix garbage data and return the resultant DataFrame.
+		return df.fillna(0)
 
 
 	def FASTAMatrix(file):
@@ -205,25 +251,80 @@ def server(input: Inputs, output: Outputs, session: Session):
 		else:
 			ax.set_xticklabels([])
 
+		# Annotate each cell with its value
+		if "label" in input.Features():
+			for i in range(df.shape[0]):
+					for j in range(df.shape[1]):
+							ax.text(j, i, '{:.2f}'.format(df.iloc[i, j]), ha='center', va='center', color='white')
+
 		return ax
 
 
 	@output
-	@render.table
-	async def LoadedTable(): return await LoadData()
+	@render.data_frame
+	@reactive.event(input.Update, input.Reset, ignore_none=False, ignore_init=False)
+	async def LoadedTable(): n = await RawData(); return DataFrame() if n is None else Cache[n]
 
 
 	@output
 	@render.plot
-	async def Heatmap(): return await GenerateHeatmap()
+	@reactive.event(input.Update, input.Reset, ignore_none=False, ignore_init=False)
+	async def Heatmap(): return [await GenerateHeatmap(), await GenerateHeatmap()]
 
 	@output
 	@render.text
 	def ExampleInfo(): return Info[input.Example()]
 
 
-	@session.download(filename="table.csv")
+	@render.download(filename="table.csv")
 	async def DownloadTable(): df = await LoadData(); yield df.to_string()
+
+
+	@reactive.Effect
+	@reactive.event(input.TableRow, input.TableCol)
+	async def UpdateValue():
+		"""
+		@brief Updates the value displayed in the TableVal input when the user changes Row/Column
+	  """
+
+		n = await RawData()
+		df = DataFrame() if n is None else Cache[n]
+
+		row_count, column_count = df.shape
+		row, column = input.TableRow(), input.TableCol()
+
+		if row < 0 or row > row_count: row = 0
+		if column < 0 or column > column_count: column = 0
+
+		if row < row_count and column < column_count:
+			ui.update_text(id="TableVal", label="Value", value=df.iloc[row, column])
+
+
+	@reactive.Effect
+	@reactive.event(input.Update)
+	async def Update():
+		"""
+		@brief Updates the value in the table with the one the user typed in upon updating
+		"""
+
+		# Get the data
+		n = await RawData()
+		df = DataFrame() if n is None else Cache[n]
+
+		row_count, column_count = df.shape
+		row, column = input.TableRow(), input.TableCol()
+
+		# So long as row and column are sane, update.
+		if row and column and row < row_count and column < column_count:
+			match input.Type():
+				case "Integer": df.iloc[row, column] = int(input.TableVal())
+				case "Float": df.iloc[row, column] = float(input.TableVal())
+				case "String": df.iloc[row, column] = input.TableVal()
+
+
+	@reactive.Effect
+	@reactive.event(input.Reset)
+	async def Reset(): del Cache[await RawData()]
 
 
 app_ui = ui.page_fluid(
@@ -271,6 +372,9 @@ app_ui = ui.page_fluid(
 				)
 			),
 
+			ui.input_action_button("Update", "Update"),
+			ui.input_action_button("Reset", "Reset Values"),
+
 			# Specify Matrix Type
 			ui.input_radio_buttons(id="MatrixType", label="Matrix Type", choices=["Distance", "Correlation"], selected="Distance", inline=True),
 
@@ -298,7 +402,7 @@ app_ui = ui.page_fluid(
 
 			# Customize what aspects of the heatmap are visible
 			ui.input_checkbox_group(id="Features", label="Heatmap Features",
-					choices={"x": "X Labels", "y": "Y Labels", "legend": "Legend"},
+					choices={"x": "X Labels", "y": "Y Labels", "label": "Data Labels", "legend": "Legend"},
 					selected=["legend"]),
 
 			# Specify the PDB Chain
@@ -316,7 +420,17 @@ app_ui = ui.page_fluid(
 		# Add the main interface tabs.
 		ui.navset_tab(
 				ui.nav_panel("Interactive", ui.output_plot("Heatmap", height="90vh")),
-				ui.nav_panel("Table", ui.output_table("LoadedTable"),),
+				ui.nav_panel("Table",
+					ui.layout_columns(
+						ui.input_numeric("TableRow", "Row", 0),
+						ui.input_numeric("TableCol", "Column", 0),
+						ui.input_text("TableVal", "Value", 0),
+						ui.input_select(id="Type", label="Datatype", choices=["Integer", "Float", "String"]),
+						col_widths=[2,2,6,2],
+					),
+
+					ui.output_data_frame("LoadedTable"),
+				),
 		),
 	)
 )
