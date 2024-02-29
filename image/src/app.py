@@ -71,7 +71,16 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 		# Add the image as an overlay, if we have one.
 		if img is not None: ax.imshow(img, extent=[0, 1, 0, 1], aspect="auto",zorder=0)
-		im = ax.imshow(df, cmap=input.ColorMap().lower(), interpolation=input.Interpolation().lower(), aspect="auto", extent=[0, 1, 0, 1], zorder=1, alpha=input.Opacity())
+		im = ax.contourf(
+			df,
+			cmap=input.ColorMap().lower(),
+			extent=[0, 1, 0, 1],
+			zorder=1,
+			alpha=input.Opacity(),
+			algorithm=input.Algorithm().lower(),
+			linestyles=input.Style().lower(),
+			levels=input.Levels(),
+		)
 
 		# Visibility of features
 		if "legend" in input.Features(): colorbar(im, ax=ax, label="Value")
@@ -154,11 +163,16 @@ app_ui = ui.page_fluid(
 			# Customize the opacity of the heatmap, making the background image more visible.
 			ui.input_slider(id="Opacity", label="Heatmap Opacity", value=0.5, min=0.0, max=1.0, step=0.1),
 
-			# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.imshow.html
-			ui.input_select(id="Interpolation", label="Interpolation", choices=["None", "Antialiased", "Nearest", "Bilinear", "Bicubic", "Spline16", "Spline36", "Hanning", "Hamming", "Hermite", "Kaiser", "Quadric", "Catrom", "Gaussian", "Bessel", "Mitchell", "Sinc", "Lanczos", "Blackman"], selected="Bilinear"),
-
 			# Set the ColorMap used.
 			ui.input_select(id="ColorMap", label="Color Map", choices=["Viridis", "Plasma", "Inferno", "Magma", "Cividis"], selected="Viridis"),
+
+			# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.contourf.html#matplotlib.pyplot.contourf
+			ui.input_select(id="Algorithm", label="Contour Algorithm", choices=["MPL2005", "MPL2014", "Serial", "Threaded"], selected="MPL2014"),
+
+			# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.contourf.html#matplotlib.pyplot.contourf
+			ui.input_select(id="Style", label=" Line Style", choices=["Solid", "Dashed", "Dashdot", "Dotted"], selected="Solid"),
+
+			ui.input_slider(id="Levels", label="Number of Levels", value=20, min=1, max=100, step=1),
 
 			# Customize what aspects of the heatmap are visible
 			ui.input_checkbox_group(id="Features", label="Heatmap Features",
