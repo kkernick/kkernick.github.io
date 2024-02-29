@@ -30,7 +30,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 		"example3.txt": "This example dataset is retrieved from the online supplement to Eisen et al. (1998), which is a very well known paper about cluster analysis and visualization. The details of how the data was collected are outlined in the paper."
 	}
 
-	DataCache = Cache()
+	DataCache = Cache("expression")
 
 
 	async def ProcessData():

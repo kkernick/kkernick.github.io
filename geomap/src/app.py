@@ -36,7 +36,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 		"example3.txt": "This example file is from the U.S. Centers for Disease Control and Prevention. The data is from Diagnosed Diabetes, Age Adjusted Rate (per 100), Adults - Total, 2013."
 	}
 
-	DataCache = Cache()
+	DataCache = Cache("geomap")
 
 
 	def LoadJSON():

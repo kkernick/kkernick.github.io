@@ -7,20 +7,19 @@ from copy import deepcopy
 from pathlib import Path
 
 
-# Interoperability between ShinyLive and PyShiny
 if "pyodide" in modules:
 	from pyodide.http import pyfetch
-	Source = "https://raw.githubusercontent.com/kkernick/kkernick.github.io/main/geocoordinate/example_input/"
-	async def download(url): r = await pyfetch(url); return await r.bytes() if r.ok else None
+	Local = False
+	async def Download(url): r = await pyfetch(url); return await r.bytes() if r.ok else None
 else:
 	from os.path import exists
-	Source = "../example_input/"
-	async def download(url): return open(url, "rb").read() if exists(url) else None
-
-SourceRoot="https://kkernick.github.io/"
+	Local = True
+	async def Download(url): return open(url, "rb").read() if exists(url) else None
 
 
 class Cache:
+
+
 	def DefaultHandler(n, i):
 		match Path(n).suffix:
 			case ".csv": df = read_csv(i)
@@ -28,11 +27,12 @@ class Cache:
 			case _: df = read_table(i)
 		return df.fillna(0)
 
-
-	def __init__(self, DataHandler = DefaultHandler):
+	def __init__(self, project, DataHandler = DefaultHandler):
 		self._primary = {}
 		self._secondary = {}
 		self._handler = DataHandler
+		self._source = "../example_input/" if Local else "https://raw.githubusercontent.com/kkernick/kkernick.github.io/main/{project}/example_input/"
+
 
 	async def Load(self, input): n = await self.N(input); return DataFrame() if n is None else self._secondary[n]
 
@@ -49,7 +49,7 @@ class Cache:
 
 		else:
 			n = input.Example()
-			if n not in self._primary: self._primary[n] = self._handler(n, BytesIO(await download(Source + n)))
+			if n not in self._primary: self._primary[n] = self._handler(n, BytesIO(await Download(self._source + n)))
 		if n not in self._secondary: self._secondary[n] = deepcopy(self._primary[n])
 		return n
 
@@ -87,12 +87,12 @@ def NavBar(current):
 			ui.panel_title(title=None, window_title="Heatmapper"),
 
 		ui.navset_bar(
-				ui.nav_panel(ui.HTML('<a href={SourceRoot}/expression/site/index.html target="_blank" rel="noopener noreferrer">Expression</a>'), value="Expression"),
-				ui.nav_panel(ui.HTML('<a href={SourceRoot}/pairwise/site/index.html target="_blank" rel="noopener noreferrer">Pairwise</a>'), value="Pairwise"),
-				ui.nav_panel(ui.HTML('<a href={SourceRoot}/image/site/index.html target="_blank" rel="noopener noreferrer">Image</a>'), value="Image"),
-				ui.nav_panel(ui.HTML('<a href={SourceRoot}/geomap/site/index.html target="_blank" rel="noopener noreferrer">Geomap</a>'), value="Geomap"),
-				ui.nav_panel(ui.HTML('<a href={SourceRoot}/geocoordinate/site/index.html target="_blank" rel="noopener noreferrer">Geocoordinate</a>'), value="Geocoordinate"),
-				ui.nav_panel(ui.HTML('<a href={SourceRoot}/about/site/index.html target="_blank" rel="noopener noreferrer">About</a>'), value="About"),
+				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io//expression/site/index.html target="_blank" rel="noopener noreferrer">Expression</a>'), value="Expression"),
+				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io//pairwise/site/index.html target="_blank" rel="noopener noreferrer">Pairwise</a>'), value="Pairwise"),
+				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io//image/site/index.html target="_blank" rel="noopener noreferrer">Image</a>'), value="Image"),
+				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io//geomap/site/index.html target="_blank" rel="noopener noreferrer">Geomap</a>'), value="Geomap"),
+				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io//geocoordinate/site/index.html target="_blank" rel="noopener noreferrer">Geocoordinate</a>'), value="Geocoordinate"),
+				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io//about/site/index.html target="_blank" rel="noopener noreferrer">About</a>'), value="About"),
 				title="Heatmapper",
 				selected=current,
 		)
@@ -101,7 +101,7 @@ def NavBar(current):
 
 def FileSelection(examples, types):
 	# If the user needs help with the formatting.
-	return [ui.HTML('<a href={SourceRoot}/about/site/index.html target="_blank" rel="noopener noreferrer">Data Format</a>'),
+	return [ui.HTML('<a href=https://kkernick.github.io//about/site/index.html target="_blank" rel="noopener noreferrer">Data Format</a>'),
 
 	# Specify whether to use example files, or upload one.
 	ui.input_radio_buttons(id="SourceFile", label="Specify a Source File", choices=["Example", "Upload"], selected="Example", inline=True),

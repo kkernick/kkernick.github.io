@@ -33,7 +33,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 		"example3.txt": "This example data set shows the location of traffic signals in Toronto. The data was obtained from Toronto Open Data. The idea to use this data set comes from this R-bloggers post by Myles Harrison."
 	}
 
-	DataCache = Cache()
+	DataCache = Cache("geocoordinate")
 
 	async def LoadMap():
 		"""

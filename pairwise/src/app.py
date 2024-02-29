@@ -41,7 +41,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 			case ".pdb": return PDBMatrix(i)
 			case ".fasta": return FASTAMatrix(i)
 			case _: return read_table(i)
-	DataCache = Cache(HandleData)
+	DataCache = Cache("pairwise", HandleData)
 
 
 	async def ParseData():

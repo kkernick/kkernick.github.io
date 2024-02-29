@@ -32,7 +32,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 		}
 	}
 
-	DataCache = Cache()
+	DataCache = Cache("image")
 
 	async def LoadImage():
 		"""
