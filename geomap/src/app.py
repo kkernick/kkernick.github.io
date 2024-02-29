@@ -73,6 +73,14 @@ def server(input: Inputs, output: Outputs, session: Session):
 		key = df.columns[0] if input.KeyColumn() is None else input.KeyColumn()
 		value = df.columns[1] if input.ValueColumn() is None else input.ValueColumn()
 
+		if input.ROI() != (0,0):
+			m, M = input.ROI()[0], input.ROI()[1]
+			oob = []
+			for index, row in df.iterrows():
+				v = row[value]
+				if v < m or v > M: oob.append(index)
+			df = df.drop(oob)
+
 		# Add the heatmap and return.
 		Choropleth(
 				geo_data=LoadJSON(),
@@ -156,6 +164,14 @@ def server(input: Inputs, output: Outputs, session: Session):
 		if 0 <= row <= rows and 0 <= column <= columns:
 			ui.update_text(id="TableVal", label="Value (" + str(df.iloc[row, column]) + ")"),
 
+	@reactive.Effect
+	async def UpdateROI():
+		df = await DataCache.Load(input)
+		value = df.columns[1] if input.ValueColumn() is None else input.ValueColumn()
+
+		m, M = df[value].min(), df[value].max()
+		ui.update_slider(id="ROI", value=(m, M), min=m, max=M)
+
 
 app_ui = ui.page_fluid(
 
@@ -223,6 +239,8 @@ app_ui = ui.page_fluid(
 
 			ui.input_slider(id="Opacity", label="Heatmap Opacity", value=0.5, min=0.0, max=1.0, step=0.1),
 			ui.input_slider(id="Bins", label="Number of Colors", value=8, min=3, max=8, step=1),
+
+			ui.input_slider(id="ROI", label="Range of Interest", value=(0,0), min=0, max=100),
 
 			# Add the download buttons.
 			"Download",
