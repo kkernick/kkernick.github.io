@@ -31,7 +31,7 @@ class Cache:
 		self._primary = {}
 		self._secondary = {}
 		self._handler = DataHandler
-		self._source = "../example_input/" if Local else "https://raw.githubusercontent.com/kkernick/kkernick.github.io/main/{project}/example_input/"
+		self._source = "../example_input/" if Local else "https://raw.githubusercontent.com/kkernick/kkernick.github.io/main/{}/example_input/".format(project)
 
 
 	async def Load(self, input): n = await self.N(input); return DataFrame() if n is None else self._secondary[n]
