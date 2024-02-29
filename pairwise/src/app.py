@@ -148,9 +148,17 @@ def server(input: Inputs, output: Outputs, session: Session):
 			coordinates = df[["x", "y", "z"]].values
 			point_names = df[list(set(df.columns) - set(["x", "y", "z"]))[0]].values
 
-		# Magic. How this handles all other cases I don't know, but it somehow works.
 		else:
-			coordinates = df.iloc[:, 1:].values
+
+			# If the first value is an integer, this is a distance matrix.
+			try:
+				int(df.iloc[0,0])
+				coordinates = df.values
+
+			# Otherwise, we assume the first row/column define the axis names.
+			except ValueError:
+				coordinates = df.iloc[:, 1:].values
+
 			point_names = None
 
 		# Calculate a distant matrix, and return it
