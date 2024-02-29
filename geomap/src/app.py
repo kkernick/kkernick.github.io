@@ -197,8 +197,6 @@ app_ui = ui.page_fluid(
 
 			ui.input_action_button("UpdateMap", "Update Heatmap"),
 
-			ui.br(),
-
 			ui.input_select(id="KeyColumn", label="Key", choices=[], multiple=False),
 			ui.input_select(id="ValueColumn", label="Value", choices=[], multiple=False),
 
