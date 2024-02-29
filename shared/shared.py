@@ -97,12 +97,12 @@ def NavBar(current):
 			ui.panel_title(title=None, window_title="Heatmapper"),
 
 		ui.navset_bar(
-				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io//expression/site/index.html>Expression</a>'), value="Expression"),
-				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io//pairwise/site/index.html>Pairwise</a>'), value="Pairwise"),
-				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io//image/site/index.html>Image</a>'), value="Image"),
-				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io//geomap/site/index.html>Geomap</a>'), value="Geomap"),
-				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io//geocoordinate/site/index.html>Geocoordinate</a>'), value="Geocoordinate"),
-				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io//about/site/index.html>About</a>'), value="About"),
+				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io/expression/site/index.html>Expression</a>'), value="Expression"),
+				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io/pairwise/site/index.html>Pairwise</a>'), value="Pairwise"),
+				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io/image/site/index.html>Image</a>'), value="Image"),
+				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io/geomap/site/index.html>Geomap</a>'), value="Geomap"),
+				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io/geocoordinate/site/index.html>Geocoordinate</a>'), value="Geocoordinate"),
+				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io/about/site/index.html>About</a>'), value="About"),
 				title="Heatmapper",
 				selected=current,
 		)
@@ -111,7 +111,7 @@ def NavBar(current):
 
 def FileSelection(examples, types):
 	# If the user needs help with the formatting.
-	return [ui.HTML('<a href=https://kkernick.github.io//about/site/index.html>Data Format</a>'),
+	return [ui.HTML('<a href=https://kkernick.github.io/about/site/index.html>Data Format</a>'),
 
 	# Specify whether to use example files, or upload one.
 	ui.input_radio_buttons(id="SourceFile", label="Specify a Source File", choices=["Example", "Upload"], selected="Example", inline=True),
