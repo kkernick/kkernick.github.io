@@ -19,7 +19,7 @@ from pandas import DataFrame
 from io import BytesIO
 from PIL import Image
 
-from shared import Table, Cache, NavBar, FileSelection, download, Source
+from shared import Table, Cache, NavBar, FileSelection
 
 
 def server(input: Inputs, output: Outputs, session: Session):
@@ -48,7 +48,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 			n = Info[input.Example()]["Image"]
 			cache = DataCache.Cache()
 			if n not in cache:
-				cache[n] = Image.open(BytesIO(await download(Source + n)))
+				cache[n] = Image.open(BytesIO(await DataCache.Download(DataCache.Source + n)))
 			return cache[n]
 
 

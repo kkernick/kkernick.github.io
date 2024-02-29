@@ -6,20 +6,17 @@ from sys import modules
 from copy import deepcopy
 from pathlib import Path
 
-
 if "pyodide" in modules:
 	from pyodide.http import pyfetch
-	Local = False
-	async def Download(url): r = await pyfetch(url); return await r.bytes() if r.ok else None
+	Pyodide = True
 else:
 	from os.path import exists
-	Local = True
-	async def Download(url): return open(url, "rb").read() if exists(url) else None
+	Pyodide = False
 
 
 class Cache:
 
-
+	@staticmethod
 	def DefaultHandler(n, i):
 		match Path(n).suffix:
 			case ".csv": df = read_csv(i)
@@ -27,11 +24,24 @@ class Cache:
 			case _: df = read_table(i)
 		return df.fillna(0)
 
+	@staticmethod
+	async def Remote(url): r = await pyfetch(url); return await r.bytes() if r.ok else None
+
+	@staticmethod
+	async def Local(url): return open(url, "rb").read() if exists(url) else None
+
+
 	def __init__(self, project, DataHandler = DefaultHandler):
 		self._primary = {}
 		self._secondary = {}
 		self._handler = DataHandler
-		self._source = "../example_input/" if Local else "https://raw.githubusercontent.com/kkernick/kkernick.github.io/main/{}/example_input/".format(project)
+
+		if Pyodide:
+			self.Download = lambda url: Cache.Remote(url)
+			self.Source = "https://raw.githubusercontent.com/kkernick/kkernick.github.io/main/{}/example_input/".format(project)
+		else:
+			self.Download = lambda url: Cache.Local(url)
+			self.Source = "../example_input/"
 
 
 	async def Load(self, input): n = await self.N(input); return DataFrame() if n is None else self._secondary[n]
@@ -49,7 +59,8 @@ class Cache:
 
 		else:
 			n = input.Example()
-			if n not in self._primary: self._primary[n] = self._handler(n, BytesIO(await Download(self._source + n)))
+			print(self.Source + n)
+			if n not in self._primary: self._primary[n] = self._handler(n, BytesIO(await self.Download(self.Source + n)))
 		if n not in self._secondary: self._secondary[n] = deepcopy(self._primary[n])
 		return n
 
