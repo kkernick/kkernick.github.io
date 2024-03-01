@@ -30,7 +30,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 	Info = {
 		"example1.csv": "Random data",
 		"example21.csv": "A parsed version of the Northeast and North Central Pacific hurricane database (HURDAT2) 2000-2022, available at https://www.nhc.noaa.gov/data/",
-		"example32.csv": "A parsed subset of Seoul's air quality in the year 2021, month of January, available at https://www.kaggle.com/datasets/williamhyun/seoulairqualityhistoricdata",
+		"example3.csv": "Recorded mean temperature (F) in the USA in 2023 as measured by the EPA, available at https://aqs.epa.gov/aqsweb/airdata/FileFormats.html#_daily_summary_files",
 
 	}
 
@@ -148,14 +148,14 @@ def server(input: Inputs, output: Outputs, session: Session):
 				if time in df: default_time = time; break
 			if not default_time:
 				columns = df.columns.tolist()
-				for n in ["Longitude", "Latitude", "Weight", "Intensity"]:
+				for n in ["Longitude", "Latitude", "Weight", "Intensity", "Value"]:
 					if n in columns:
 						columns.remove(n)
 				print(columns)
 				default_time = columns[0]
 
 			default_value = None
-			for value in ["Weight", "Intensity"]:
+			for value in ["Weight", "Intensity", "Value"]:
 				if value in df: default_value = value; break
 			if not default_value:
 				columns = df.columns.tolist()
@@ -177,7 +177,7 @@ app_ui = ui.page_fluid(
 		ui.sidebar(
 
 			FileSelection(
-				examples={"example1.csv": "Example 1", "example21.csv": "Example 2", "example32.csv": "Example 3"},
+				examples={"example1.csv": "Example 1", "example21.csv": "Example 2", "example3.csv": "Example 3"},
 				types=[".csv", ".txt", ".xlsx"]
 			),
 
