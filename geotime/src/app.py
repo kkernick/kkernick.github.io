@@ -29,7 +29,9 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 	Info = {
 		"example1.csv": "Random data",
-		"example21.csv": "A parsed version of the Northeast and North Central Pacific hurricane database (HURDAT2) 1949-2022, available at https://www.nhc.noaa.gov/data/"
+		"example21.csv": "A parsed version of the Northeast and North Central Pacific hurricane database (HURDAT2) 2000-2022, available at https://www.nhc.noaa.gov/data/",
+		"example32.csv": "A parsed subset of Seoul's air quality in the year 2021, month of January, available at https://www.kaggle.com/datasets/williamhyun/seoulairqualityhistoricdata",
+
 	}
 
 	DataCache = Cache("geotime")
@@ -144,12 +146,24 @@ def server(input: Inputs, output: Outputs, session: Session):
 			default_time = None
 			for time in ["Time", "Date"]:
 				if time in df: default_time = time; break
-			if not default_time: default_time = df.columns[0]
+			if not default_time:
+				columns = df.columns.tolist()
+				for n in ["Longitude", "Latitude", "Weight", "Intensity"]:
+					if n in columns:
+						columns.remove(n)
+				print(columns)
+				default_time = columns[0]
 
 			default_value = None
 			for value in ["Weight", "Intensity"]:
 				if value in df: default_value = value; break
-			if not default_value: default_value = df.columns[1]
+			if not default_value:
+				columns = df.columns.tolist()
+				for n in ["Longitude", "Latitude", "Time", "Date"]:
+					if n in columns:
+						columns.remove(n)
+				print(columns)
+				default_value = columns[0]
 
 			ui.update_select(id="TimeColumn", choices=choices, selected=default_time)
 			ui.update_select(id="ValueColumn", choices=choices, selected=default_value)
@@ -163,7 +177,7 @@ app_ui = ui.page_fluid(
 		ui.sidebar(
 
 			FileSelection(
-				examples={"example1.csv": "Example 1", "example21.csv": "Example 2"},
+				examples={"example1.csv": "Example 1", "example21.csv": "Example 2", "example32.csv": "Example 3"},
 				types=[".csv", ".txt", ".xlsx"]
 			),
 
