@@ -24,6 +24,22 @@ else:
 	Pyodide = False
 
 
+TemporalColumns = {"time", "date"}
+
+
+def Filter(columns, good_columns, bad_columns):
+	ret = None
+	for column in columns:
+		lowered = column.lower()
+		if lowered in good_columns:
+			return column
+		elif lowered in bad_columns:
+			break
+		elif ret is not None:
+			ret = column
+	return ret
+
+
 class Cache:
 	"""
 	@brief A class that encompasses fetching/storing web resources.
@@ -80,7 +96,10 @@ class Cache:
 			self.Source = "../example_input/"
 
 
-	async def Load(self, input): n = await self.N(input); return DataFrame() if n is None else self._secondary[n]
+	async def Load(self, input, copy=False):
+		n = await self.N(input);
+		df = DataFrame() if n is None else self._secondary[n]
+		return deepcopy(df) if copy else df
 
 
 	async def N(self, input):

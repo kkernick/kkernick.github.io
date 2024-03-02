@@ -9,5 +9,5 @@ Manitoba	920.9	532.5	228.8
 Saskatchewan	1138.7	686.5	291.9
 Alberta	2416.6	1662.3	1191.3
 British Columbia	2475.1	1276.8	692.2
-Yukon	90	43.3	12.4
-Northwest Territories and Nunavut	500.4	245.8	46.7
+Yukon Territory	90	43.3	12.4
+Northwest Territories	500.4	245.8	46.7
