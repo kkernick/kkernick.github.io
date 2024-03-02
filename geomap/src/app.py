@@ -96,7 +96,6 @@ def server(input: Inputs, output: Outputs, session: Session):
 			case "Viridis": cmap = linear.viridis.scale
 
 		m, M = df[values].values.min(), df[values].values.max()
-		print(m, M)
 		colormap = cmap(m, M)
 
 		style = {}
@@ -107,7 +106,6 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 			for i, (name, group) in enumerate(grouped):
 				style[i] = {}
-				print(i, name)
 				for a, row in group.iterrows():
 
 					# If the year isn't parsable, pray that it just works without parsing :)
