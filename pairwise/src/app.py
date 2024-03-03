@@ -214,7 +214,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 	@output
 	@render.plot
-	@reactive.event(input.Update, input.Reset, input.Example, input.File, input.UpdateMap, ignore_none=False, ignore_init=False)
+	@reactive.event(input.Update, input.Reset, input.Example, input.File, input.MatrixType, input.TextSize, input.DistanceMethod, input.CorrelationMethod, input.Interpolation, input.ColorMap, input.Features, input.Chain, input.K, ignore_none=False, ignore_init=False)
 	async def Heatmap(): return await GenerateHeatmap()
 
 	@output
@@ -262,8 +262,6 @@ app_ui = ui.page_fluid(
 				examples={"example1.txt": "Example 1", "example2.txt": "Example 2", "example3.txt": "Example 3"},
 				types=[".csv", ".txt", ".xlsx", ".pdb", ".dat", ".fasta"]
 			),
-
-			ui.input_action_button("UpdateMap", "Update Heatmap"),
 
 			# Specify Matrix Type
 			ui.input_radio_buttons(id="MatrixType", label="Matrix Type", choices=["Distance", "Correlation"], selected="Distance", inline=True),

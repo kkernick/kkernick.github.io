@@ -158,13 +158,13 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 	@output
 	@render.plot
-	@reactive.event(input.Update, input.Reset, input.Example, input.File, input.UpdateMap, ignore_none=False, ignore_init=False)
+	@reactive.event(input.Update, input.Reset, input.Example, input.File, input.ClusterMethod, input.DistanceMethod, input.TextSize, input.ScaleType, input.Interpolation, input.ColorMap, input.Features, ignore_none=False, ignore_init=False)
 	async def Heatmap(): return await GenerateHeatmap()
 
 
 	@output
 	@render.plot
-	@reactive.event(input.Update, input.Reset, input.Example, input.File, ignore_none=False, ignore_init=False)
+	@reactive.event(input.Update, input.Reset, input.Example, input.File, input.Orientation, input.ClusterMethod, input.DistanceMethod, input.TextSize, ignore_none=False, ignore_init=False)
 	async def RowDendrogram():
 		index_labels, _, data = await ProcessData()
 
@@ -182,7 +182,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 	@output
 	@render.plot
-	@reactive.event(input.Update, input.Reset, input.Example, input.File, ignore_none=False, ignore_init=False)
+	@reactive.event(input.Update, input.Reset, input.Example, input.File, input.Orientation, input.ClusterMethod, input.DistanceMethod, input.TextSize, ignore_none=False, ignore_init=False)
 	async def ColumnDendrogram():
 		_, x_labels, data = await ProcessData()
 
@@ -242,8 +242,6 @@ app_ui = ui.page_fluid(
 				examples={"example1.txt": "Example 1", "example2.txt": "Example 2", "example3.txt": "Example 3"},
 				types=[".csv", ".txt", ".xlsx", ".pdb", ".dat"]
 			),
-
-			ui.input_action_button("UpdateMap", "Update Heatmap"),
 
 			# https://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html
 			ui.input_select(id="ClusterMethod", label="Clustering Method", choices=["Single", "Complete", "Average", "Weighted", "Centroid", "Median", "Ward"], selected="Average"),

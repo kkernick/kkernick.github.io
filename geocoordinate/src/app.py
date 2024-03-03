@@ -131,7 +131,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 	@output
 	@render.ui
-	@reactive.event(input.Update, input.Reset, input.Example, input.File, input.UpdateMap, input.TimeColumn, input.ValueColumn, input.Temporal, input.MapType, input.Opacity, input.Radius, input.Blur, ignore_none=False, ignore_init=False)
+	@reactive.event(input.Update, input.Reset, input.Example, input.File, input.TimeColumn, input.ValueColumn, input.Temporal, input.MapType, input.Opacity, input.Radius, input.Blur, ignore_none=False, ignore_init=False)
 	async def Map(): return await LoadMap()
 
 
@@ -247,8 +247,6 @@ app_ui = ui.page_fluid(
 				},
 				types=[".csv", ".txt", ".xlsx"]
 			),
-
-			ui.input_action_button("UpdateMap", "Update Heatmap"),
 
 			ui.input_checkbox(id="Temporal", label="Temporal Choropleth"),
 

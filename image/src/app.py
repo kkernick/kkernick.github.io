@@ -106,7 +106,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 	@output
 	@render.plot
-	@reactive.event(input.Update, input.Reset, input.Example, input.File, input.UpdateMap, ignore_none=False, ignore_init=False)
+	@reactive.event(input.Update, input.Reset, input.Example, input.File, input.TextSize, input.Opacity, input.ColorMap, input.Algorithm, input.Style, input.Levels, input.Features, ignore_none=False, ignore_init=False)
 	async def Heatmap(): return await GenerateHeatmap()
 
 
@@ -154,8 +154,6 @@ app_ui = ui.page_fluid(
 			FileSelection(examples={"example1.txt": "Example 1"}, types=[".csv", ".txt", ".xlsx"]),
 
 			ui.panel_conditional("input.SourceFile === 'Upload'", ui.input_file("Image", "Choose your Image File", accept=[".png", ".jpg"], multiple=False)),
-
-			ui.input_action_button("UpdateMap", "Update Heatmap"),
 
 			# Customize the text size of the axes.
 			ui.input_numeric(id="TextSize", label="Text Size", value=8, min=1, max=50, step=1),
