@@ -184,7 +184,6 @@ def NavBar(current):
 				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io/image/site/index.html>Image</a>'), value="Image"),
 				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io/geomap/site/index.html>Geomap</a>'), value="Geomap"),
 				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io/geocoordinate/site/index.html>Geocoordinate</a>'), value="Geocoordinate"),
-				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io/geotime/site/index.html>Geotime</a>'), value="Geotime"),
 				ui.nav_panel(ui.HTML('<a href=https://kkernick.github.io/about/site/index.html>About</a>'), value="About"),
 				title="Heatmapper",
 				selected=current,
